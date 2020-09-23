@@ -1,0 +1,7 @@
+*.bak
+settings_local.py
+output.*
+resources/
+.idea/
+__pycache__/
+venv/
