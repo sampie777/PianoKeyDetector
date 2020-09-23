@@ -29,7 +29,7 @@ def main(args: List):
     Config.load_profile(profiles.profiles[2].name)
 
     handle_command_args(args)
-    # Config.calibration = True
+    Config.calibration = True
     Config.show_preview_video = True
 
     generate_keys()
@@ -104,10 +104,16 @@ def generate_keys():
     c = Config.profile.c
 
     keys.clear()
-    for i in range(0, 30):
+    key_amount = 30
+    for i in range(0, key_amount):
+        color_diff = (i + 1) / key_amount * 6.3
+        color_diff %= 1
+
         note_name = note_base_names[i % 12] + str(i // 12)
-        keys.append(
-                Key(note_name, round(start_location[0] + i * x_increment), round(start_location[1] + i * y_increment)))
+        keys.append(Key(note_name,
+                        round(start_location[0] + i * x_increment),
+                        round(start_location[1] + i * y_increment),
+                        color=(255, 255 * color_diff, 255 - 255 * color_diff)))
 
         x_increment *= a
         y_increment *= a

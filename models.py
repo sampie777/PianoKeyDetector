@@ -11,11 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class Key:
-    def __init__(self, name: str, x: int = -1, y: int = -1, points: List = None, calibrated: bool = False):
+    def __init__(self, name: str,
+                 x: int = -1, y: int = -1,
+                 points: List = None,
+                 color: tuple = (255, 255, 0),
+                 calibrated: bool = False):
         self.name: str = name
         self.x: int = x
         self.y: int = y
         self.pressed: bool = False
+        self.color: tuple = color
         self.calibrated: bool = calibrated
         self.points: List = points if points is not None else []
 

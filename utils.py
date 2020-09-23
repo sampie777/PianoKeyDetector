@@ -62,27 +62,25 @@ def paint_pressed_keys_points(frame, offset: List = None):
             if offset is not None:
                 point = (offset[0] + point[0], offset[1] + point[1])
 
-            a = (i + 1) / len(keys) * 6.3
-            a %= 1
-
             if not Config.paint_key_points_as_line:
-                cv2.circle(frame, point, 1, (255, 255 * a, 255 - 255 * a), -1, lineType=cv2.LINE_AA)
+                cv2.circle(frame, point, 1, key.color, -1, lineType=cv2.LINE_AA)
             else:
                 if prev_point is None:
                     prev_point = point
                     continue
 
-                cv2.line(frame, prev_point, point, (255, 255 * a, 255 - 255 * a), 1, lineType=cv2.LINE_AA)
+                cv2.line(frame, prev_point, point, key.color, 1, lineType=cv2.LINE_AA)
                 prev_point = point
 
 
-def paint_key_name(frame, key, text_margin, offset: List = None):
+def paint_key_name(frame, key, text_margin: int, offset: List = None):
     if len(key.points) == 0:
         return
 
     draw_point = np.mean(key.points, axis=0)
+    draw_point = (round(draw_point[0]), round(draw_point[1]))
     if offset is not None:
-        draw_point = (round(offset[0] + draw_point[0]), round(offset[1] + draw_point[1]))
+        draw_point = (offset[0] + draw_point[0], offset[1] + draw_point[1])
 
     # Draw shadow
     cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
@@ -92,7 +90,7 @@ def paint_key_name(frame, key, text_margin, offset: List = None):
     # Draw text
     cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
                 Config.font_family, Config.font_scale,
-                Config.font_color,
+                key.color,
                 Config.font_thickness, Config.line_type)
 
 

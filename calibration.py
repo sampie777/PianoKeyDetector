@@ -123,5 +123,8 @@ def loop(frame) -> bool:
 def print_keys():
     print("keys = [")
     for key in keys:
-        print("Key(\"{}\", calibrated=True, points=[{}]),".format(key.name, ', '.join(str(point) for point in key.points)))
+        print("Key(\"{}\", calibrated={}, color=({}), points=[{}]),"
+              .format(key.name, key.calibrated,
+                      ', '.join(str(round(color)) for color in key.color),
+                      ', '.join(str(point) for point in key.points)))
     print("]")
