@@ -3,6 +3,7 @@ from typing import List
 
 import cv2
 
+import calibration
 from config import Config
 import numpy as np
 
@@ -40,11 +41,20 @@ class Key:
         self.pressed = average_brightness > Config.brightness_threshold
 
     def is_in_contour(self, contour):
+        self.pressed = False
         for point in self.points:
             result = cv2.pointPolygonTest(contour, point, False)
-            if result > 0:
-                self.pressed = True
-                return True
+            if result < 1:
+                continue
+
+            center = calibration.get_contour_center(contour)
+            distance = np.linalg.norm(np.subtract(center, point))
+
+            if distance > 1:
+                continue
+
+            self.pressed = True
+            return True
         return False
 
     def __repr__(self):

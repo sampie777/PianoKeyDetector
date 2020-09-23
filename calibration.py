@@ -33,21 +33,40 @@ def get_contour_center(contour):
 def calibrate_key(frame, key: Key):
     contours, zone = get_objects_in_frame(frame)
 
+    detect_keys_from_contours(contours)
+
     if len(contours) == 0 and len(key.points) > 0:
         key.calibrated = True
         return True
 
-    # draw_contours(contours, zone)
+    draw_contours(contours, zone)
 
     contour_centers = list(get_contour_center(contour) for contour in contours)
-    # for c in contour_centers:
-    #     cv2.circle(zone, c, 5, (255, 0, 0), -1, lineType=cv2.LINE_AA)
+    for c in contour_centers:
+        cv2.circle(zone, c, 5, (255, 0, 0), -1, lineType=cv2.LINE_AA)
 
     # if len(contour_centers) > 0:
     #     key.points.append(contour_centers[0])
 
     paint_keys(zone)
     display_calibration_key_text(zone, key)
+
+    for key in keys:
+        if not key.pressed:
+            continue
+
+        text_margin = 50
+        # Draw shadow
+        cv2.putText(zone, key.name, (key.points[0][0] + text_margin, key.points[0][1] - text_margin),
+                    Config.font_family, Config.font_scale,
+                    (0, 0, 0),
+                    round(Config.font_thickness * 1.4), Config.line_type)
+        # Draw text
+        cv2.putText(zone, key.name, (key.points[0][0] + text_margin, key.points[0][1] - text_margin),
+                    Config.font_family, Config.font_scale,
+                    Config.font_color,
+                    Config.font_thickness, Config.line_type)
+
     return show_image(zone)
 
 
@@ -109,3 +128,10 @@ def paint_keys(frame):
 
             cv2.line(frame, prev_point, point, (255, 255 * (i + 1) // len(keys), 0), 1, lineType=cv2.LINE_AA)
             prev_point = point
+
+
+def detect_keys_from_contours(contours):
+    for key in keys:
+        key.pressed = False
+        for contour in contours:
+            key.is_in_contour(contour)
