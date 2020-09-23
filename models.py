@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class Key:
-    def __init__(self, name: str, x: int = -1, y: int = -1, points: List = None):
+    def __init__(self, name: str, x: int = -1, y: int = -1, points: List = None, calibrated: bool = False):
         self.name: str = name
         self.x: int = x
         self.y: int = y
         self.pressed: bool = False
-        self.calibrated: bool = False
+        self.calibrated: bool = calibrated
         self.points: List = points if points is not None else []
 
     def is_pressed_in_frame(self, frame):

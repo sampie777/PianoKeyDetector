@@ -1,4 +1,7 @@
+from typing import List
+
 import cv2
+import numpy as np
 
 from config import Config
 from project_state import keys
@@ -41,25 +44,28 @@ def get_objects_in_frame(frame):
 
     if background_image is None:
         background_image = blurred
-        return [], zone
+        return [], zone, zone, zone
 
     differences = cv2.subtract(blurred, background_image)
     thresh = cv2.threshold(differences, 80, 255, cv2.THRESH_BINARY)[1]
     # thresh = cv2.dilate(thresh, None, iterations=2)
 
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = list(filter(lambda c: cv2.contourArea(c) > 200, contours))
-    return contours, zone
+    contours = list(filter(lambda c: cv2.contourArea(c) > Config.minimal_contour_area, contours))
+    return contours, zone, differences, thresh
 
 
-def paint_pressed_keys_points(frame):
+def paint_pressed_keys_points(frame, offset: List = None):
     for i, key in enumerate(keys):
         prev_point = None
         for point in key.points:
+            if offset is not None:
+                point = (offset[0] + point[0], offset[1] + point[1])
+
             a = (i + 1) / len(keys) * 6.3
             a %= 1
 
-            if not Config.pain_key_points_as_line:
+            if not Config.paint_key_points_as_line:
                 cv2.circle(frame, point, 1, (255, 255 * a, 255 - 255 * a), -1, lineType=cv2.LINE_AA)
             else:
                 if prev_point is None:
@@ -70,17 +76,21 @@ def paint_pressed_keys_points(frame):
                 prev_point = point
 
 
-def paint_key_name(frame, key, text_margin):
+def paint_key_name(frame, key, text_margin, offset: List = None):
     if len(key.points) == 0:
         return
 
+    draw_point = np.mean(key.points, axis=0)
+    if offset is not None:
+        draw_point = (round(offset[0] + draw_point[0]), round(offset[1] + draw_point[1]))
+
     # Draw shadow
-    cv2.putText(frame, key.name, (key.points[0][0] + text_margin, key.points[0][1] - text_margin),
+    cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
                 Config.font_family, Config.font_scale,
                 (0, 0, 0),
                 round(Config.font_thickness * 1.4), Config.line_type)
     # Draw text
-    cv2.putText(frame, key.name, (key.points[0][0] + text_margin, key.points[0][1] - text_margin),
+    cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
                 Config.font_family, Config.font_scale,
                 Config.font_color,
                 Config.font_thickness, Config.line_type)

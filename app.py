@@ -29,7 +29,7 @@ def main(args: List):
     Config.load_profile(profiles.profiles[2].name)
 
     handle_command_args(args)
-    Config.calibration = True
+    # Config.calibration = True
     Config.show_preview_video = True
 
     generate_keys()
@@ -65,7 +65,8 @@ def main(args: List):
             logger.info("Exiting loop: KeyboardInterrupt")
             break
 
-    calibration.print_keys()
+    if Config.calibration:
+        calibration.print_keys()
 
     if not Config.is_image:
         logger.info("Releasing capture")

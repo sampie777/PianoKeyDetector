@@ -28,10 +28,13 @@ class Config(object):
     preview_frame_rate = 1
 
     calibration: bool = False
+    minimal_contour_area: int = 50
     calibration_delay_between_keys: float = 0.0
     calibration_key_start_delay: float = 0.0
-    calibration_key_stop_delay: float = 0.1
-    pain_key_points_as_line: bool = False
+    calibration_key_stop_delay: float = 0.11
+    paint_key_points_as_line: bool = False
+
+    key_points_filter_standard_deviation = [15, 15]
 
     # PROCESSING
     brightness_threshold: int = 0

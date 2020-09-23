@@ -8,7 +8,7 @@ import numpy as np
 from config import Config
 from models import Key
 from project_state import keys
-from utils import show_image, get_objects_in_frame, paint_key_name
+from utils import show_image, get_objects_in_frame, paint_key_name, paint_pressed_keys_points
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +16,13 @@ logger = logging.getLogger(__name__)
 def loop(frame) -> bool:
     # detect_key_presses_for_frame(frame)
 
-    contours, zone = get_objects_in_frame(frame)
+    contours, zone = get_objects_in_frame(frame)[:2]
 
     detect_keys_from_contours(contours)
 
     key_presses: List[Key] = list(filter(lambda key: key.pressed, keys))
+
+    paint_pressed_keys_points(frame, offset=Config.zone_bounds[0])
 
     return display_pressed_keys(key_presses, frame)
 
@@ -63,4 +65,4 @@ def paint_key_on_frame(frame, key):
         return
 
     text_margin = Config.key_brightness_area_size + Config.line_width
-    paint_key_name(frame, key, text_margin)
+    paint_key_name(frame, key, text_margin, offset=Config.zone_bounds[0])
