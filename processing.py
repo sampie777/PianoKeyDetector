@@ -8,13 +8,17 @@ import numpy as np
 from config import Config
 from models import Key
 from project_state import keys
-from utils import show_image
+from utils import show_image, get_objects_in_frame, paint_key_name
 
 logger = logging.getLogger(__name__)
 
 
 def loop(frame) -> bool:
-    detect_key_presses_for_frame(frame)
+    # detect_key_presses_for_frame(frame)
+
+    contours, zone = get_objects_in_frame(frame)
+
+    detect_keys_from_contours(contours)
 
     key_presses: List[Key] = list(filter(lambda key: key.pressed, keys))
 
@@ -24,6 +28,13 @@ def loop(frame) -> bool:
 def detect_key_presses_for_frame(frame):
     for key in keys:
         key.is_pressed_in_frame(frame)
+
+
+def detect_keys_from_contours(contours):
+    for key in keys:
+        key.pressed = False
+        for contour in contours:
+            key.pressed = key.is_in_contour(contour)
 
 
 def display_pressed_keys(key_presses, frame) -> bool:
@@ -51,14 +62,5 @@ def paint_key_on_frame(frame, key):
     if not key.pressed:
         return
 
-    text_margin = (Config.key_brightness_area_size + Config.line_width)
-    # Draw shadow
-    cv2.putText(frame, key.name, (key.x + text_margin, key.y - text_margin),
-                Config.font_family, Config.font_scale,
-                (0, 0, 0),
-                round(Config.font_thickness * 1.4), Config.line_type)
-    # Draw text
-    cv2.putText(frame, key.name, (key.x + text_margin, key.y - text_margin),
-                Config.font_family, Config.font_scale,
-                Config.font_color,
-                Config.font_thickness, Config.line_type)
+    text_margin = Config.key_brightness_area_size + Config.line_width
+    paint_key_name(frame, key, text_margin)

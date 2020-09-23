@@ -41,7 +41,6 @@ class Key:
         self.pressed = average_brightness > Config.brightness_threshold
 
     def is_in_contour(self, contour):
-        self.pressed = False
         for point in self.points:
             result = cv2.pointPolygonTest(contour, point, False)
             if result < 1:
@@ -53,7 +52,6 @@ class Key:
             if distance > 1:
                 continue
 
-            self.pressed = True
             return True
         return False
 
