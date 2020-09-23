@@ -21,8 +21,8 @@ no_more_contours_found_time: Optional[float] = None
 def paint_calibration_key_text(frame, key: Optional[Key]):
     text = "" if key is None else key.name
 
-    cv2.rectangle(frame, (0, 0), (100, 80), (255, 255, 255), -1)
-    cv2.putText(frame, text, (20, 60), Config.font_family, 2, (0, 0, 0), 2, lineType=Config.line_type)
+    cv2.rectangle(frame, (0, 0), (140, 80), (255, 255, 255), -1)
+    cv2.putText(frame, text, (10, 60), Config.font_family, 2, (0, 0, 0), 2, lineType=Config.line_type)
 
 
 def calibrate_key(frame, key: Key):
@@ -37,9 +37,9 @@ def calibrate_key(frame, key: Key):
         paint_calibration_key_text(zone, key)
 
     if last_calibrated + Config.calibration_delay_between_keys + Config.calibration_key_start_delay < time.time():
-        check_if_calibration_is_done(contours, key)
-
         add_contour_centers_to_key_points(contour_centers, key)
+
+        check_if_calibration_is_done(contours, key)
 
     paint_pressed_keys_points(zone)
     paint_contour_outlines(contours, zone)
