@@ -8,8 +8,8 @@ import numpy as np
 from config import Config
 from models import Key
 from project_state import keys
-from utils import show_image, get_contour_center, get_objects_in_frame, paint_contour_outlines, \
-    paint_pressed_keys_points, \
+from utils import show_image, get_contour_center, get_contours_in_frame, paint_contour_outlines, \
+    paint_keys_points, \
     paint_key_name, paint_contour_centers
 
 logger = logging.getLogger(__name__)
@@ -18,9 +18,7 @@ last_calibrated = time.time()
 no_more_contours_found_time: Optional[float] = None
 
 
-def paint_calibration_key_text(frame, key: Optional[Key]):
-    text = "" if key is None else key.name
-
+def paint_calibration_status_text(frame, text):
     cv2.rectangle(frame, (0, 0), (140, 80), (255, 255, 255), -1)
     cv2.putText(frame, text, (10, 60), Config.font_family, 2, (0, 0, 0), 2, lineType=Config.line_type)
 
@@ -28,21 +26,23 @@ def paint_calibration_key_text(frame, key: Optional[Key]):
 def calibrate_key(frame, key: Key):
     global last_calibrated, no_more_contours_found_time
 
-    contours, zone = get_objects_in_frame(frame)[:2]
+    # PROCESSING PART
+    contours, zone = get_contours_in_frame(frame)[:2]
     contour_centers = get_contours_centers(contours)
-
-    if last_calibrated + Config.calibration_delay_between_keys > time.time():
-        paint_calibration_key_text(zone, None)
-    else:
-        paint_calibration_key_text(zone, key)
 
     if last_calibrated + Config.calibration_delay_between_keys + Config.calibration_key_start_delay < time.time():
         add_contour_centers_to_key_points(contour_centers, key)
 
         check_if_calibration_is_done(contours, key)
 
-    paint_pressed_keys_points(zone)
-    paint_contour_outlines(contours, zone)
+    # PAINT PART
+    if last_calibrated + Config.calibration_delay_between_keys > time.time():
+        paint_calibration_status_text(zone, "")
+    else:
+        paint_calibration_status_text(zone, key.name)
+
+    paint_keys_points(zone)
+    paint_contour_outlines(zone, contours)
     paint_contour_centers(zone, contour_centers)
     paint_key_name(zone, key, text_margin=Config.key_brightness_area_size + Config.line_width)
 

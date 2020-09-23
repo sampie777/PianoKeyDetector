@@ -27,14 +27,14 @@ def get_contour_center(contour):
     return x, y
 
 
-def paint_contour_outlines(contours, frame):
+def paint_contour_outlines(frame, contours):
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
         cv2.drawContours(frame, [contour], 0, (0, 255, 0), 3)
 
 
-def get_objects_in_frame(frame):
+def get_contours_in_frame(frame):
     global background_image
 
     zone = frame[Config.zone_bounds[0][1]:Config.zone_bounds[1][1], Config.zone_bounds[0][0]:Config.zone_bounds[1][0]]
@@ -55,7 +55,7 @@ def get_objects_in_frame(frame):
     return contours, zone, differences, thresh
 
 
-def paint_pressed_keys_points(frame, offset: List = None):
+def paint_keys_points(frame, offset: List = None):
     for i, key in enumerate(keys):
         prev_point = None
         for point in key.points:
