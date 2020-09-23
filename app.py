@@ -5,8 +5,12 @@ from typing import List
 import cv2
 import numpy as np
 
+import calibration
+import processing
+import profiles
 from config import Config
 from models import Key
+from project_state import keys
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +18,19 @@ logging.basicConfig(
         format='[%(levelname)s] %(asctime)s %(name)s | %(message)s',
         level=Config.log_level)
 
-keys: List[Key] = []
 note_base_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 
 def main(args: List):
     logger.info("Starting application")
-    Config.load_profile("IMG_20200922_170508.jpg 1.0")
+    # Config.load_profile("IMG_20200922_170508.jpg 1.0")
     # Config.load_profile("IMG_20200922_170508.jpg 2.0")
     # Config.load_profile("VID_20200922_223905.mp4 1.0")
+    Config.load_profile(profiles.profiles[2].name)
 
     handle_command_args(args)
     Config.calibration = True
+    Config.show_preview_video = True
 
     generate_keys()
 
@@ -39,17 +44,28 @@ def main(args: List):
                                        (capture.get(cv2.CAP_PROP_FRAME_WIDTH), capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     while True:
-        ret, frame = get_frame(capture)
-        if not ret or frame is None:
-            logger.info("No new frame found, exiting loop")
+        try:
+            ret, frame = get_frame(capture)
+            if not ret or frame is None:
+                logger.info("No new frame found, exiting loop")
+                break
+
+            if Config.calibration:
+                if not calibration.loop(frame):
+                    logger.info("Loop exited")
+                    break
+            else:
+                if not processing.loop(frame):
+                    logger.info("Loop exited")
+                    break
+
+            if Config.record_output:
+                video_writer.write(frame)
+        except KeyboardInterrupt:
+            logger.info("Exiting loop: KeyboardInterrupt")
             break
 
-        if not loop(frame):
-            logger.info("Loop exited")
-            break
-
-        if Config.record_output:
-            video_writer.write(frame)
+    calibration.print_keys()
 
     if not Config.is_image:
         logger.info("Releasing capture")
@@ -64,7 +80,9 @@ def main(args: List):
 
 
 def generate_keys():
-    global keys
+    if len(keys) > 0:
+        return
+
     # keys = [
     #     Key("B3", 1675, 1924),
     #     Key("C3", 1678, 1966),
@@ -101,12 +119,14 @@ def handle_command_args(args: list):
     Config.file_name = args[0] if len(args) > 0 else Config.default_file_name
     Config.gray_scale = "--color" in args
     Config.calibration = "--calibrate" in args
+    Config.show_preview_video = "--preview" in args
     Config.record_output = "--record" in args
 
-    logger.info("Config.FILE_NAME={}".format(Config.file_name))
-    logger.info("Config.GRAY_SCALE={}".format(Config.gray_scale))
-    logger.info("Config.CALIBRATION={}".format(Config.calibration))
-    logger.info("Config.RECORD_OUTPUT={}".format(Config.record_output))
+    logger.info("Config.file_name={}".format(Config.file_name))
+    logger.info("Config.gray_scale={}".format(Config.gray_scale))
+    logger.info("Config.show_preview_video={}".format(Config.show_preview_video))
+    logger.info("Config.calibration={}".format(Config.calibration))
+    logger.info("Config.record_output={}".format(Config.record_output))
 
 
 def setup_video_input():
@@ -135,68 +155,6 @@ def get_frame(capture):
         ret, frame = capture.read()
 
     return ret, frame
-
-
-def loop(frame) -> bool:
-    detect_key_presses_for_frame(frame)
-
-    key_presses: List[Key] = list(filter(lambda key: key.pressed, keys))
-
-    return display_pressed_keys(key_presses, frame)
-
-
-def detect_key_presses_for_frame(frame):
-    for key in keys:
-        key.is_pressed_in_frame(frame)
-
-
-def display_pressed_keys(key_presses, frame) -> bool:
-    key_presses_names: List[str] = list(map(lambda key: key.name, key_presses))
-
-    if not Config.calibration:
-        print(' '.join(key_presses_names))
-        return True
-
-    for key in keys:
-        try:
-            paint_key_on_frame(frame, key)
-        except:
-            pass
-
-    return show_image(frame)
-
-
-def paint_key_on_frame(frame, key):
-    circle_color = Config.pressed_color if key.pressed else Config.not_pressed_color
-
-    cv2.circle(frame, (key.x, key.y), Config.key_brightness_area_size + Config.line_width // 2, circle_color,
-               Config.line_width, lineType=Config.line_type)
-
-    if not key.pressed:
-        return
-
-    text_margin = (Config.key_brightness_area_size + Config.line_width)
-    # Draw shadow
-    cv2.putText(frame, key.name, (key.x + text_margin, key.y - text_margin),
-                Config.text_font, Config.font_scale,
-                (0, 0, 0),
-                round(Config.font_thickness * 1.4), Config.line_type)
-    # Draw text
-    cv2.putText(frame, key.name, (key.x + text_margin, key.y - text_margin),
-                Config.text_font, Config.font_scale,
-                Config.font_color,
-                Config.font_thickness, Config.line_type)
-
-
-def show_image(image, title: str = "Image", delay: int = Config.preview_frame_rate) -> bool:
-    cv2.namedWindow(title, cv2.WND_PROP_FULLSCREEN)
-    cv2.setWindowProperty(title, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-    cv2.imshow(title, image)
-
-    key = cv2.waitKey(delay)
-    if key in [27, 13, 32]:
-        return False
-    return True
 
 
 if __name__ == "__main__":

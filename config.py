@@ -24,6 +24,7 @@ class Config(object):
     gray_scale: bool = True
     is_image: bool = False
     record_output: bool = False
+    show_preview_video: bool = False
     calibration: bool = False
     preview_frame_rate = 1
 
@@ -34,7 +35,7 @@ class Config(object):
     line_width: int = 2
     pressed_color = (255, 255, 255)
     not_pressed_color = (0, 0, 0)
-    text_font = cv2.FONT_HERSHEY_SIMPLEX
+    font_family = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 2
     font_color = (255, 255, 0)
     font_thickness = 5
