@@ -56,13 +56,18 @@ def paint_pressed_keys_points(frame):
     for i, key in enumerate(keys):
         prev_point = None
         for point in key.points:
-            if prev_point is None:
-                prev_point = point
-                continue
+            a = (i + 1) / len(keys) * 6.3
+            a %= 1
 
-            a = (i + 1) / len(keys)
-            cv2.line(frame, prev_point, point, (255, 255 * a, 255 - 255 * a), 1, lineType=cv2.LINE_AA)
-            prev_point = point
+            if not Config.pain_key_points_as_line:
+                cv2.circle(frame, point, 1, (255, 255 * a, 255 - 255 * a), -1, lineType=cv2.LINE_AA)
+            else:
+                if prev_point is None:
+                    prev_point = point
+                    continue
+
+                cv2.line(frame, prev_point, point, (255, 255 * a, 255 - 255 * a), 1, lineType=cv2.LINE_AA)
+                prev_point = point
 
 
 def paint_key_name(frame, key, text_margin):

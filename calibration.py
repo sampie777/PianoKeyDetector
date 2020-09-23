@@ -15,6 +15,7 @@ from utils import show_image, get_contour_center, get_objects_in_frame, paint_co
 logger = logging.getLogger(__name__)
 
 last_calibrated = time.time()
+no_more_contours_found_time: Optional[float] = None
 
 
 def paint_calibration_key_text(frame, key: Optional[Key]):
@@ -25,7 +26,7 @@ def paint_calibration_key_text(frame, key: Optional[Key]):
 
 
 def calibrate_key(frame, key: Key):
-    global last_calibrated
+    global last_calibrated, no_more_contours_found_time
 
     contours, zone = get_objects_in_frame(frame)
     contour_centers = get_contours_centers(contours)
@@ -36,9 +37,14 @@ def calibrate_key(frame, key: Key):
         if last_calibrated + Config.calibration_delay_between_keys + Config.calibration_key_start_delay < time.time():
 
             if len(contours) == 0 and len(key.points) > 0:
-                key.calibrated = True
-                last_calibrated = time.time()
-                logger.info("Key {} calibrated. Delaying for: {} ms".format(key, Config.calibration_delay_between_keys))
+                if no_more_contours_found_time is None:
+                    no_more_contours_found_time = time.time()
+                elif no_more_contours_found_time + Config.calibration_key_stop_delay < time.time():
+                    no_more_contours_found_time = None
+                    key.calibrated = True
+                    last_calibrated = time.time()
+                    logger.info("Key {} calibrated. Delaying for: {} ms".format(key,
+                                                                                Config.calibration_delay_between_keys))
 
             add_contour_centers_to_key_points(contour_centers, key)
 
