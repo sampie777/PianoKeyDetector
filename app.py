@@ -26,7 +26,7 @@ def main(args: List):
     # Config.load_profile("IMG_20200922_170508.jpg 1.0")
     # Config.load_profile("IMG_20200922_170508.jpg 2.0")
     # Config.load_profile("VID_20200922_223905.mp4 1.0")
-    Config.load_profile(profiles.profiles[2].name)
+    Config.load_profile(profiles.profiles[3].name)
 
     handle_command_args(args)
     # Config.calibration = True
@@ -53,7 +53,7 @@ def main(args: List):
                 break
 
             if Config.calibration:
-                if not calibration.loop(frame):
+                if not calibration.loop(frame, current_frame_index):
                     logger.info("Loop exited")
                     break
             else:

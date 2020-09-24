@@ -31,7 +31,7 @@ def paint_contour_outlines(frame, contours):
     for contour in contours:
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
-        cv2.drawContours(frame, [contour], 0, (0, 255, 0), 3)
+        cv2.drawContours(frame, [contour], 0, (0, 100, 255), 2)
 
 
 def get_contours_in_frame(frame):
@@ -39,16 +39,19 @@ def get_contours_in_frame(frame):
 
     zone = frame[Config.zone_bounds[0][1]:Config.zone_bounds[1][1], Config.zone_bounds[0][0]:Config.zone_bounds[1][0]]
     gray = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (9, 9), 0)
-    blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
+    blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+    # blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
 
     if background_image is None:
         background_image = blurred
         return [], zone, zone, zone
 
-    differences = cv2.subtract(blurred, background_image)
-    thresh = cv2.threshold(differences, 80, 255, cv2.THRESH_BINARY)[1]
+    # differences = cv2.subtract(blurred, background_image)
+    differences = cv2.absdiff(background_image, blurred)
+
+    thresh = cv2.threshold(differences, Config.contour_brightness_threshold, 255, cv2.THRESH_BINARY)[1]
     # thresh = cv2.dilate(thresh, None, iterations=2)
+    # thresh = cv2.erode(thresh, None, iterations=2)
 
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = list(filter(lambda c: cv2.contourArea(c) > Config.minimal_contour_area, contours))

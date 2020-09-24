@@ -82,6 +82,8 @@ def get_contours_centers(contours):
 
 def add_contour_centers_to_key_points(contour_centers, key):
     for center in contour_centers:
+        if center in key.points:
+            continue
         key.points.append(center)
 
 
@@ -107,7 +109,11 @@ def filter_points_for_key(key):
     key.points = filtered_points
 
 
-def loop(frame) -> bool:
+def loop(frame, current_frame_index: int = -1) -> bool:
+
+    if current_frame_index < 5 * 30:
+        return True
+
     try:
         key_to_calibrate = next(key for key in keys if not key.is_calibrated)
     except StopIteration:

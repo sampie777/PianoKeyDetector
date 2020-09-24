@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List
 
 import cv2
@@ -25,8 +26,14 @@ class Key:
         self.is_calibrated: bool = is_calibrated
         self.points: List = points if points is not None else []
         self.detected_chance: float = 0.0
-        self.highest_detected_chance: float = 0.0   # temp variable
+        self.highest_detected_chance: float = 0.0  # temp variable
         self.key_detected_chance_threshold: float = key_detected_chance_threshold
+
+        self._detected_points: set = set()
+        self._detected_changes: List = []
+        self._last_match_time = 0
+        self._cooldown_time = Config.preview_frame_rate * 0.1
+        self._detect_using_points = False
 
     def is_pressed_in_frame(self, frame):
         frame_height, frame_width = frame.shape[:2]
@@ -52,21 +59,56 @@ class Key:
     def check_for_contour(self, contour):
         self.detected_chance = 0.0
 
+        # Detect points in contour
         for point in self.points:
             result = cv2.pointPolygonTest(contour, point, False)
             if result < 1:
                 continue
 
             self.detected_chance += 1 / len(self.points)
+            self._detected_points.add(point)
 
-        if self.detected_chance > self.key_detected_chance_threshold:
-            self.is_pressed = True
+        if self._detect_using_points:
+            # Reset if there aren't any points in the contour
+            if self.detected_chance == 0.0:
+                if self._last_match_time + self._cooldown_time < time.time():
+                    self._detected_points.clear()
+            else:
+                self._last_match_time = time.time()
+
+            # Determine if there are enough points in the contour for a key press
+            if len(self._detected_points) > 0.95 * len(self.points):
+                self.is_pressed = True
+            else:
+                self.is_pressed = False
+
+            # temp
+            self.highest_detected_chance = len(self._detected_points)
+            self.detected_chance = len(self.points)
         else:
-            self.is_pressed = False
+            self._detected_changes.append(self.detected_chance)
 
-        # temp
-        if self.detected_chance > self.highest_detected_chance:
-            self.highest_detected_chance = self.detected_chance
+            # Reset if there aren't any points in the contour
+            if self.detected_chance == 0.0:
+                if self._last_match_time + self._cooldown_time < time.time():
+                    self._detected_changes.clear()
+            else:
+                self._last_match_time = time.time()
+
+            # Determine if there are enough points in the contour for a key press
+            if len(self._detected_changes) == 0:
+                detected_average = 0
+            else:
+                detected_average = sum(self._detected_changes) / len(self._detected_changes)
+
+            if detected_average > 0.3:
+                self.is_pressed = True
+            else:
+                self.is_pressed = False
+
+            # temp
+            if detected_average > self.highest_detected_chance:
+                self.highest_detected_chance = detected_average
 
     def __repr__(self):
         return "Key(name={},x={},y={},pressed={})".format(self.name, self.x, self.y, self.is_pressed)
