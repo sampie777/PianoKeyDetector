@@ -29,10 +29,10 @@ def main(args: List):
     Config.load_profile(profiles.profiles[2].name)
 
     handle_command_args(args)
-    Config.calibration = True
+    # Config.calibration = True
     Config.show_preview_video = True
 
-    generate_keys()
+    load_keys()
 
     # setup video input
     capture = setup_video_input()
@@ -43,8 +43,10 @@ def main(args: List):
                                        cv2.VideoWriter_fourcc(*'MPEG'), 24.0,
                                        (capture.get(cv2.CAP_PROP_FRAME_WIDTH), capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
+    current_frame_index = -1
     while True:
         try:
+            current_frame_index += 1
             ret, frame = get_frame(capture)
             if not ret or frame is None:
                 logger.info("No new frame found, exiting loop")
@@ -55,7 +57,7 @@ def main(args: List):
                     logger.info("Loop exited")
                     break
             else:
-                if not processing.loop(frame):
+                if not processing.loop(frame, current_frame_index):
                     logger.info("Loop exited")
                     break
 
@@ -80,7 +82,10 @@ def main(args: List):
     logger.info("Application finished")
 
 
-def generate_keys():
+def load_keys():
+    if Config.calibration:
+        keys.clear()
+
     if len(keys) > 0:
         return
 
@@ -146,6 +151,9 @@ def setup_video_input():
     else:
         logger.info("Opening video file: {}".format(Config.file_name))
         capture = cv2.VideoCapture(Config.file_name)
+
+        logger.info("Video capture FPS: {}".format(capture.get(cv2.CAP_PROP_FPS)))
+        logger.info("Video capture frame count: {}".format(capture.get(cv2.CAP_PROP_FRAME_COUNT)))
 
     if capture is None:
         logger.error("Failed to open file: {}".format(Config.file_name))

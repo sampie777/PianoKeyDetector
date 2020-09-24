@@ -15,23 +15,27 @@ class Key:
                  x: int = -1, y: int = -1,
                  points: List = None,
                  color: tuple = (255, 255, 0),
-                 calibrated: bool = False):
+                 is_calibrated: bool = False,
+                 key_detected_chance_threshold: float = 0.0):
         self.name: str = name
         self.x: int = x
         self.y: int = y
-        self.pressed: bool = False
+        self.is_pressed: bool = False
         self.color: tuple = color
-        self.calibrated: bool = calibrated
+        self.is_calibrated: bool = is_calibrated
         self.points: List = points if points is not None else []
+        self.detected_chance: float = 0.0
+        self.highest_detected_chance: float = 0.0   # temp variable
+        self.key_detected_chance_threshold: float = key_detected_chance_threshold
 
     def is_pressed_in_frame(self, frame):
         frame_height, frame_width = frame.shape[:2]
 
         if self.y < 0 or self.y > frame_height:
-            self.pressed = False
+            self.is_pressed = False
             return
         if self.x < 0 or self.x > frame_width:
-            self.pressed = False
+            self.is_pressed = False
             return
 
         y0 = max(0, min(frame_height - 1, self.y - Config.key_brightness_area_size))
@@ -43,22 +47,26 @@ class Key:
         average_brightness = np.sum(test_area) / ((y1 - y0) * (x1 - x0))
 
         logger.debug("{}: {}".format(self, average_brightness))
-        self.pressed = average_brightness > Config.brightness_threshold
+        self.is_pressed = average_brightness > Config.brightness_threshold
 
-    def is_in_contour(self, contour):
+    def check_for_contour(self, contour):
+        self.detected_chance = 0.0
+
         for point in self.points:
             result = cv2.pointPolygonTest(contour, point, False)
             if result < 1:
                 continue
 
-            center = calibration.get_contour_center(contour)
-            distance = np.linalg.norm(np.subtract(center, point))
+            self.detected_chance += 1 / len(self.points)
 
-            if distance > 1:
-                continue
+        if self.detected_chance > self.key_detected_chance_threshold:
+            self.is_pressed = True
+        else:
+            self.is_pressed = False
 
-            return True
-        return False
+        # temp
+        if self.detected_chance > self.highest_detected_chance:
+            self.highest_detected_chance = self.detected_chance
 
     def __repr__(self):
-        return "Key(name={},x={},y={},pressed={})".format(self.name, self.x, self.y, self.pressed)
+        return "Key(name={},x={},y={},pressed={})".format(self.name, self.x, self.y, self.is_pressed)

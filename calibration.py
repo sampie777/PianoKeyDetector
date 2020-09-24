@@ -71,7 +71,7 @@ def check_if_calibration_is_done(contours, key):
         logger.warning("All points are filtered out for key {}. Retrying.".format(key))
         return
 
-    key.calibrated = True
+    key.is_calibrated = True
     logger.info("Key {} calibrated. Delaying for: {} ms"
                 .format(key, Config.calibration_delay_between_keys))
 
@@ -109,7 +109,7 @@ def filter_points_for_key(key):
 
 def loop(frame) -> bool:
     try:
-        key_to_calibrate = next(key for key in keys if not key.calibrated)
+        key_to_calibrate = next(key for key in keys if not key.is_calibrated)
     except StopIteration:
         logger.info("Calibration is done")
         return False
@@ -123,8 +123,9 @@ def loop(frame) -> bool:
 def print_keys():
     print("keys = [")
     for key in keys:
-        print("Key(\"{}\", calibrated={}, color=({}), points=[{}]),"
-              .format(key.name, key.calibrated,
+        print("Key(\"{}\", is_calibrated={}, color=({}), key_detected_chance_threshold={}, points=[{}]),"
+              .format(key.name, key.is_calibrated,
                       ', '.join(str(round(color)) for color in key.color),
+                      round(key.highest_detected_chance * 0.8, 6),
                       ', '.join(str(point) for point in key.points)))
     print("]")

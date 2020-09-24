@@ -52,11 +52,14 @@ def get_contours_in_frame(frame):
 
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = list(filter(lambda c: cv2.contourArea(c) > Config.minimal_contour_area, contours))
+
+    differences = cv2.cvtColor(differences, cv2.COLOR_GRAY2BGR)
+    thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
     return contours, zone, differences, thresh
 
 
 def paint_keys_points(frame, offset: List = None):
-    for i, key in enumerate(keys):
+    for key in keys:
         prev_point = None
         for point in key.points:
             if offset is not None:
@@ -77,10 +80,7 @@ def paint_key_name(frame, key, text_margin: int, offset: List = None):
     if len(key.points) == 0:
         return
 
-    draw_point = np.mean(key.points, axis=0)
-    draw_point = (round(draw_point[0]), round(draw_point[1]))
-    if offset is not None:
-        draw_point = (offset[0] + draw_point[0], offset[1] + draw_point[1])
+    draw_point = get_drawing_point_for_point_with_offset(np.mean(key.points, axis=0), offset)
 
     # Draw shadow
     cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
@@ -92,6 +92,13 @@ def paint_key_name(frame, key, text_margin: int, offset: List = None):
                 Config.font_family, Config.font_scale,
                 key.color,
                 Config.font_thickness, Config.line_type)
+
+
+def get_drawing_point_for_point_with_offset(draw_point, offset):
+    draw_point = (round(draw_point[0]), round(draw_point[1]))
+    if offset is not None:
+        draw_point = (offset[0] + draw_point[0], offset[1] + draw_point[1])
+    return draw_point
 
 
 def paint_contour_centers(frame, contour_centers):
