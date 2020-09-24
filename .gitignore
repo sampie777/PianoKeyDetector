@@ -1,6 +1,9 @@
 *.bak
 settings_local.py
-output.*
+output.avi
+output.mp4
+output.mid
+tmp/
 resources/
 .idea/
 __pycache__/

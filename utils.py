@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import cv2
@@ -6,6 +7,10 @@ import numpy as np
 from config import Config
 from project_state import keys
 
+logger = logging.getLogger(__name__)
+
+background_image_file = cv2.imread(
+        "/home/prive/IdeaProjects/PianoKeyDetector/Image_screenshot_24.09.2020_background.png", cv2.IMREAD_COLOR)
 background_image = None
 
 
@@ -28,22 +33,65 @@ def get_contour_center(contour):
 
 
 def paint_contour_outlines(frame, contours):
-    for contour in contours:
+    for i, contour in enumerate(contours):
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
-        cv2.drawContours(frame, [contour], 0, (0, 100, 255), 2)
+        cv2.drawContours(frame, [contour], 0, (0, 100, 255), 1)
+        cv2.putText(frame, str(i), (x+w + 5, y), Config.font_family, 0.8, (200, 0, 200), 1)
 
 
-def get_contours_in_frame(frame):
+def get_key_foot_contour(frame, contours):
+    line = [
+        (122, 389),
+        (1917, 267)
+    ]
+
+    cv2.line(frame, line[0], line[1], (0, 50, 0), 1)
+
+    foot_contours = []
+    for contour in contours:
+        center = get_contour_center(contour)
+        side = np.cross(np.subtract(line[1], line[0]), np.subtract(center, line[0]))
+        if side < 0:
+            continue
+
+        foot_contours.append(contour)
+    return foot_contours
+
+
+def prepare_frame(frame):
     global background_image
+    if background_image is None and Config.profile.name == "Image_screenshot_24.09.2020_keypress.png 1.0":
+        frame = background_image_file.copy()
 
     zone = frame[Config.zone_bounds[0][1]:Config.zone_bounds[1][1], Config.zone_bounds[0][0]:Config.zone_bounds[1][0]]
-    gray = cv2.cvtColor(zone, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+
+    ##
+    mask_area = np.array([(120, 400),
+                          (1690, 270),
+                          (1710, 417),
+                          (141, 430)])
+    # cv2.drawContours(zone, [mask_area], 0, (255, 0, 255), 1)
+    mask = np.zeros_like(zone)
+    cv2.drawContours(mask, [mask_area], 0, (255, 255, 255), -1)
+    masked = np.zeros_like(zone)
+    masked[mask == 255] = zone[mask == 255]
+
+    gray = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
     # blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
 
     if background_image is None:
+        logger.info("Set background image")
         background_image = blurred
+        return zone, blurred, True
+
+    return zone, blurred, False
+
+
+def get_contours_in_frame(frame):
+    zone, blurred, is_background = prepare_frame(frame)
+    if is_background:
         return [], zone, zone, zone
 
     # differences = cv2.subtract(blurred, background_image)
@@ -55,6 +103,14 @@ def get_contours_in_frame(frame):
 
     contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = list(filter(lambda c: cv2.contourArea(c) > Config.minimal_contour_area, contours))
+
+    ##
+    t_max = 300
+    t_min = 150
+    # thresh = cv2.Canny(zone, t_min, t_max)
+
+    ##
+    #
 
     differences = cv2.cvtColor(differences, cv2.COLOR_GRAY2BGR)
     thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)

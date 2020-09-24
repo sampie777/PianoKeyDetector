@@ -5,7 +5,6 @@ from typing import Optional
 import cv2
 
 from profiles import Profile
-
 from profiles import profiles
 
 logger = logging.getLogger(__name__)

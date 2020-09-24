@@ -1,13 +1,15 @@
 import logging
 import sys
+import time
 from typing import List
 
 import cv2
-import numpy as np
 
 import calibration
+import output
 import processing
 import profiles
+import project_state
 from config import Config
 from models import Key
 from project_state import keys
@@ -18,14 +20,10 @@ logging.basicConfig(
         format='[%(levelname)s] %(asctime)s %(name)s | %(message)s',
         level=Config.log_level)
 
-note_base_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-
 
 def main(args: List):
     logger.info("Starting application")
-    # Config.load_profile("IMG_20200922_170508.jpg 1.0")
-    # Config.load_profile("IMG_20200922_170508.jpg 2.0")
-    # Config.load_profile("VID_20200922_223905.mp4 1.0")
+
     Config.load_profile(profiles.profiles[3].name)
 
     handle_command_args(args)
@@ -69,6 +67,9 @@ def main(args: List):
 
     if Config.calibration:
         calibration.print_keys()
+    else:
+        # output.midi_save_file("output_" + str(round(time.time())) + ".mid")
+        output.midi_save_file()
 
     if not Config.is_image:
         logger.info("Releasing capture")
@@ -114,7 +115,7 @@ def load_keys():
         color_diff = (i + 1) / key_amount * 6.3
         color_diff %= 1
 
-        note_name = note_base_names[i % 12] + str(i // 12)
+        note_name = Key.note_base_names[i % 12] + str(i // 12)
         keys.append(Key(note_name,
                         round(start_location[0] + i * x_increment),
                         round(start_location[1] + i * y_increment),
@@ -152,7 +153,8 @@ def setup_video_input():
         logger.info("Opening video file: {}".format(Config.file_name))
         capture = cv2.VideoCapture(Config.file_name)
 
-        logger.info("Video capture FPS: {}".format(capture.get(cv2.CAP_PROP_FPS)))
+        project_state.fps = capture.get(cv2.CAP_PROP_FPS)
+        logger.info("Video capture FPS: {}".format(project_state.fps))
         logger.info("Video capture frame count: {}".format(capture.get(cv2.CAP_PROP_FRAME_COUNT)))
 
     if capture is None:

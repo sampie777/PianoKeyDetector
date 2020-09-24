@@ -3,15 +3,17 @@ import time
 from typing import List
 
 import cv2
-
-import calibration
-from config import Config
 import numpy as np
+
+from config import Config
 
 logger = logging.getLogger(__name__)
 
 
 class Key:
+
+    note_base_names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
     def __init__(self, name: str,
                  x: int = -1, y: int = -1,
                  points: List = None,
@@ -28,21 +30,36 @@ class Key:
         self.detected_chance: float = 0.0
         self.highest_detected_chance: float = 0.0  # temp variable
         self.key_detected_chance_threshold: float = key_detected_chance_threshold
+        self.contour = np.array([])
+
+        self.midi_pitch = Key.get_pitch_for_key(self.name)
 
         self._detected_points: set = set()
         self._detected_changes: List = []
         self._last_match_time = 0
-        self._cooldown_time = Config.preview_frame_rate * 0.1
+        self._cooldown_time = Config.preview_frame_rate * 0.05
         self._detect_using_points = False
+
+        self._previous_state: bool = False
+
+    def state_changed(self) -> bool:
+        return self.is_pressed != self._previous_state
+
+    def set_pressed(self, is_pressed: bool):
+        # if is_pressed != self.is_pressed:
+        #     logger.info("Changing state for key {}".format(self))
+        self._previous_state = self.is_pressed
+        self.is_pressed = is_pressed
+        # logger.info("{} New state: {}, previous: {}".format(self.name, self.is_pressed, self._previous_state))
 
     def is_pressed_in_frame(self, frame):
         frame_height, frame_width = frame.shape[:2]
 
         if self.y < 0 or self.y > frame_height:
-            self.is_pressed = False
+            self.set_pressed(False)
             return
         if self.x < 0 or self.x > frame_width:
-            self.is_pressed = False
+            self.set_pressed(False)
             return
 
         y0 = max(0, min(frame_height - 1, self.y - Config.key_brightness_area_size))
@@ -57,8 +74,6 @@ class Key:
         self.is_pressed = average_brightness > Config.brightness_threshold
 
     def check_for_contour(self, contour):
-        self.detected_chance = 0.0
-
         # Detect points in contour
         for point in self.points:
             result = cv2.pointPolygonTest(contour, point, False)
@@ -68,6 +83,7 @@ class Key:
             self.detected_chance += 1 / len(self.points)
             self._detected_points.add(point)
 
+    def check_for_contour_finalize(self):
         if self._detect_using_points:
             # Reset if there aren't any points in the contour
             if self.detected_chance == 0.0:
@@ -77,10 +93,10 @@ class Key:
                 self._last_match_time = time.time()
 
             # Determine if there are enough points in the contour for a key press
-            if len(self._detected_points) > 0.95 * len(self.points):
-                self.is_pressed = True
+            if len(self._detected_points) > 0.92 * len(self.points):
+                self.set_pressed(True)
             else:
-                self.is_pressed = False
+                self.set_pressed(False)
 
             # temp
             self.highest_detected_chance = len(self._detected_points)
@@ -102,13 +118,27 @@ class Key:
                 detected_average = sum(self._detected_changes) / len(self._detected_changes)
 
             if detected_average > 0.3:
-                self.is_pressed = True
+                self.set_pressed(True)
             else:
-                self.is_pressed = False
+                self.set_pressed(False)
 
             # temp
             if detected_average > self.highest_detected_chance:
                 self.highest_detected_chance = detected_average
 
+        self.detected_chance = 0
+
     def __repr__(self):
         return "Key(name={},x={},y={},pressed={})".format(self.name, self.x, self.y, self.is_pressed)
+
+    @staticmethod
+    def get_pitch_for_key(key_name: str) -> int:
+        offset_octave = 2
+        octave = int(key_name[-1:]) + offset_octave
+        note = key_name[:-1]
+
+        index = Key.note_base_names.index(note)
+
+        pitch = 12 + index + 12 * octave
+        logger.info("Pitch for key '{}' is: {}".format(key_name, pitch))
+        return pitch

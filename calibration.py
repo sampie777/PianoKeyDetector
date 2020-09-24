@@ -10,7 +10,7 @@ from models import Key
 from project_state import keys
 from utils import show_image, get_contour_center, get_contours_in_frame, paint_contour_outlines, \
     paint_keys_points, \
-    paint_key_name, paint_contour_centers
+    paint_key_name, paint_contour_centers, get_key_foot_contour
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,20 @@ def calibrate_key(frame, key: Key):
     # PROCESSING PART
     contours, zone = get_contours_in_frame(frame)[:2]
     contour_centers = get_contours_centers(contours)
+
+    # foot_contours = get_key_foot_contour(zone, contours)
+    #
+    # if len(contours) > 0:
+    #     shape = np.array(
+    #             [[[339, 380]], [[339, 382]], [[340, 383]], [[340, 386]], [[341, 387]], [[341, 391]], [[342, 392]],
+    #              [[342, 395]], [[343, 396]], [[343, 398]], [[341, 400]], [[340, 400]], [[339, 401]], [[335, 401]],
+    #              [[335, 402]], [[336, 403]], [[336, 405]], [[337, 406]], [[337, 407]], [[338, 408]], [[338, 410]],
+    #              [[339, 411]], [[339, 414]], [[346, 414]], [[347, 413]], [[349, 413]], [[349, 407]], [[348, 406]],
+    #              [[348, 403]], [[347, 402]], [[347, 401]], [[345, 399]], [[345, 398]], [[344, 397]], [[344, 396]],
+    #              [[343, 395]], [[343, 389]], [[342, 388]], [[342, 385]], [[341, 384]], [[341, 382]]])
+    #
+    #     result = cv2.matchShapes(shape, contours[0], cv2.CONTOURS_MATCH_I1, 0.0)
+    #     # print(result)
 
     if last_calibrated + Config.calibration_delay_between_keys + Config.calibration_key_start_delay < time.time():
         add_contour_centers_to_key_points(contour_centers, key)
@@ -110,7 +124,6 @@ def filter_points_for_key(key):
 
 
 def loop(frame, current_frame_index: int = -1) -> bool:
-
     if current_frame_index < 5 * 30:
         return True
 
