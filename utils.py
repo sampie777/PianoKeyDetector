@@ -37,7 +37,7 @@ def paint_contour_outlines(frame, contours):
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
         cv2.drawContours(frame, [contour], 0, (0, 100, 255), 1)
-        cv2.putText(frame, str(i), (x+w + 5, y), Config.font_family, 0.8, (200, 0, 200), 1)
+        cv2.putText(frame, str(i), (x + w + 5, y), Config.font_family, 0.8, (200, 0, 200), 1)
 
 
 def get_key_foot_contour(frame, contours):
@@ -78,8 +78,8 @@ def prepare_frame(frame):
     masked[mask == 255] = zone[mask == 255]
 
     gray = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
-    # blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
+    blurred = cv2.GaussianBlur(gray, (9, 9), 0)
+    blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
 
     if background_image is None:
         logger.info("Set background image")
@@ -105,8 +105,8 @@ def get_contours_in_frame(frame):
     contours = list(filter(lambda c: cv2.contourArea(c) > Config.minimal_contour_area, contours))
 
     ##
-    t_max = 300
-    t_min = 150
+    # t_max = 300
+    # t_min = 150
     # thresh = cv2.Canny(zone, t_min, t_max)
 
     ##
@@ -119,6 +119,11 @@ def get_contours_in_frame(frame):
 
 def paint_keys_points(frame, offset: List = None):
     for key in keys:
+
+        if key.line is not None:
+            cv2.line(frame, key.line[0], key.line[1], key.color, 2)
+            continue
+
         prev_point = None
         for point in key.points:
             if offset is not None:
@@ -163,3 +168,17 @@ def get_drawing_point_for_point_with_offset(draw_point, offset):
 def paint_contour_centers(frame, contour_centers):
     for c in contour_centers:
         cv2.circle(frame, c, 5, (255, 0, 0), -1, lineType=cv2.LINE_AA)
+
+
+def best_fit_slope_and_intercept(xs: np.ndarray, ys: np.ndarray):
+    # https://pythonprogramming.net/how-to-program-best-fit-line-machine-learning-tutorial/
+    # y(x) = m * x + b
+    m_denominator = np.mean(xs) * np.mean(xs) - np.mean(xs * xs)
+    if m_denominator == 0:
+        m = 0
+    else:
+        m = (np.mean(xs) * np.mean(ys) - np.mean(xs * ys)) / m_denominator
+
+    b = np.mean(ys) - m * np.mean(xs)
+
+    return m, b

@@ -18,7 +18,7 @@ def paint_keys_detected_chances(frame):
     for i, key in enumerate(keys):
         cv2.putText(frame, "{0: <5}".format(key.name),
                     (10, 50 + i * 20), Config.font_family, 0.6, (255, 255, 0), 1, lineType=cv2.LINE_AA)
-        cv2.putText(frame, "{:0.4f}  ({:0.4f})".format(round(len(key.points), 4),
+        cv2.putText(frame, "{:0.4f}  ({:0.4f})".format(round(key.detected_chance, 4),
                                                        round(key.highest_detected_chance, 4)),
                     (60, 50 + i * 20), Config.font_family, 0.6, (255, 255, 0), 1, lineType=cv2.LINE_AA)
 

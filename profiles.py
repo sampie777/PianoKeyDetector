@@ -44,7 +44,7 @@ def get_average_brightness_for(min: int, max: int) -> int:
 
 
 profiles: List[Profile] = [
-    Profile("IMG_20200922_170508.jpg 1.0",
+    Profile("IMG_20200922_170508.jpg 1.0",  # 0
             start_location=(1390, 1571),
             x_increment=7,
             y_increment=35,
@@ -54,7 +54,7 @@ profiles: List[Profile] = [
             brightness_threshold=get_average_brightness_for(412, 489),
             default_file_name="/home/prive/IdeaProjects/PianoKeyDetector/resources/IMG_20200922_170508.jpg"
             ),
-    Profile("IMG_20200922_170508.jpg 2.0",
+    Profile("IMG_20200922_170508.jpg 2.0",  # 1
             start_location=(1550, 1571),
             x_increment=13,
             y_increment=42,
@@ -64,7 +64,7 @@ profiles: List[Profile] = [
             brightness_threshold=get_average_brightness_for(412, 489),
             default_file_name="/home/prive/IdeaProjects/PianoKeyDetector/resources/IMG_20200922_170508.jpg"
             ),
-    Profile("VID_20200922_223905.mp4 1.0",
+    Profile("VID_20200922_223905.mp4 1.0",  # 2
             start_location=(360, 450),
             x_increment=13,
             y_increment=-1,
@@ -82,7 +82,7 @@ profiles: List[Profile] = [
             key_points_filter_standard_deviation=[15, 15],
             contour_brightness_threshold=80,
             ),
-    Profile("VID_20200924_100646.mp4 1.0",
+    Profile("VID_20200924_100646.mp4 1.0",  # 3
             start_location=(360, 450),
             x_increment=13,
             y_increment=-1,
@@ -96,11 +96,11 @@ profiles: List[Profile] = [
             minimal_contour_area=50,
             calibration_delay_between_keys=0.0,
             calibration_key_start_delay=0.0,
-            calibration_key_stop_delay=0.1,
+            calibration_key_stop_delay=0.0,
             key_points_filter_standard_deviation=[15, 15],
-            contour_brightness_threshold=40,
+            contour_brightness_threshold=30,
             ),
-    Profile("VID_20200924_100802.mp4 1.0",
+    Profile("VID_20200924_100802.mp4 1.0",  # 4
             start_location=(360, 450),
             x_increment=13,
             y_increment=-1,
