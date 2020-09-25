@@ -51,32 +51,15 @@ class Key:
         return self.is_pressed != self._previous_state
 
     def set_pressed(self, is_pressed: bool):
-        # if is_pressed != self.is_pressed:
-        #     logger.info("Changing state for key {}".format(self))
         self._previous_state = self.is_pressed
         self.is_pressed = is_pressed
-        # logger.info("{} New state: {}, previous: {}".format(self.name, self.is_pressed, self._previous_state))
 
-    def is_pressed_in_frame(self, frame):
-        frame_height, frame_width = frame.shape[:2]
-
-        if self.y < 0 or self.y > frame_height:
-            self.set_pressed(False)
-            return
-        if self.x < 0 or self.x > frame_width:
-            self.set_pressed(False)
-            return
-
-        y0 = max(0, min(frame_height - 1, self.y - Config.key_brightness_area_size))
-        y1 = max(0, min(frame_height - 1, self.y + Config.key_brightness_area_size))
-        x0 = max(0, min(frame_width - 1, self.x - Config.key_brightness_area_size))
-        x1 = max(0, min(frame_width - 1, self.x + Config.key_brightness_area_size))
-        test_area = frame[y0:y1, x0:x1]
-
-        average_brightness = np.sum(test_area) / ((y1 - y0) * (x1 - x0))
-
-        logger.debug("{}: {}".format(self, average_brightness))
-        self.is_pressed = average_brightness > Config.brightness_threshold
+    def get_center_point(self) -> tuple:
+        if self.line is not None:
+            return tuple(np.mean(self.line, axis=0))
+        if len(self.points) > 0:
+            return tuple(np.mean(self.points, axis=0))
+        return self.x, self.y
 
     def check_for_contour(self, contour):
         if self._detect_using_line:

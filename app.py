@@ -1,6 +1,5 @@
 import logging
 import sys
-import time
 from typing import List
 
 import cv2
@@ -27,7 +26,7 @@ def main(args: List):
     Config.load_profile(profiles.profiles[3].name)
 
     handle_command_args(args)
-    # Config.calibration = True
+    Config.calibrating = True
     Config.show_preview_video = True
 
     load_keys()
@@ -35,11 +34,7 @@ def main(args: List):
     # setup video input
     capture = setup_video_input()
 
-    if Config.record_output:
-        logger.info("Creating video writer")
-        video_writer = cv2.VideoWriter('/home/prive/IdeaProjects/PianoKeyDetector/output.mp4',
-                                       cv2.VideoWriter_fourcc(*'MPEG'), 24.0,
-                                       (capture.get(cv2.CAP_PROP_FRAME_WIDTH), capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    output.setup_outputs()
 
     current_frame_index = -1
     while True:
@@ -50,7 +45,7 @@ def main(args: List):
                 logger.info("No new frame found, exiting loop")
                 break
 
-            if Config.calibration:
+            if Config.calibrating:
                 if not calibration.loop(frame, current_frame_index):
                     logger.info("Loop exited")
                     break
@@ -59,96 +54,60 @@ def main(args: List):
                     logger.info("Loop exited")
                     break
 
-            if Config.record_output:
-                video_writer.write(frame)
+            output.write_output_frame(current_frame_index, frame)
+
         except KeyboardInterrupt:
             logger.info("Exiting loop: KeyboardInterrupt")
             break
 
-    if Config.calibration:
-        calibration.print_keys()
-    else:
-        # output.midi_save_file("output_" + str(round(time.time())) + ".mid")
-        output.midi_save_file()
+    output.save_outputs()
 
-    if not Config.is_image:
+    if not project_state.is_image:
         logger.info("Releasing capture")
         capture.release()
-
-    if Config.record_output:
-        logger.info("Releasing video writer")
-        video_writer.release()
 
     cv2.destroyAllWindows()
     logger.info("Application finished")
 
 
 def load_keys():
-    if Config.calibration:
+    if Config.calibrating:
         keys.clear()
 
     if len(keys) > 0:
         return
 
-    # keys = [
-    #     Key("B3", 1675, 1924),
-    #     Key("C3", 1678, 1966),
-    #     Key("D3", 1681, 2008),
-    #     Key("E3", 1684, 2050),
-    # ]
-
-    # start_location = (1390, 1571)
-
-    # start_location = (1675, 1924)
-    # start_location = (1550, 1571)
-
-    start_location = Config.profile.start_location
-    x_increment = Config.profile.x_increment
-    y_increment = Config.profile.y_increment
-    a = Config.profile.a
-    b = Config.profile.b
-    c = Config.profile.c
-
-    keys.clear()
-    key_amount = 30
+    # Generate keys
+    key_amount = Config.key_amount_to_calibrate
     for i in range(0, key_amount):
         color_diff = (i + 1) / key_amount * 6.3
         color_diff %= 1
+        key_color = (255, 255 * color_diff, 255 - 255 * color_diff)
 
         note_name = Key.note_base_names[i % 12] + str(i // 12)
-        keys.append(Key(note_name,
-                        round(start_location[0] + i * x_increment),
-                        round(start_location[1] + i * y_increment),
-                        color=(255, 255 * color_diff, 255 - 255 * color_diff)))
 
-        x_increment *= a
-        y_increment *= a
-
-        a *= b
-        b *= c
+        keys.append(Key(note_name, color=key_color))
 
 
 def handle_command_args(args: list):
     Config.file_name = args[0] if len(args) > 0 else Config.default_file_name
-    Config.gray_scale = "--color" in args
-    Config.calibration = "--calibrate" in args
+    Config.calibrating = "--calibrate" in args
     Config.show_preview_video = "--preview" in args
-    Config.record_output = "--record" in args
+    Config.save_to_video = "--record" in args
 
     logger.info("Config.file_name={}".format(Config.file_name))
-    logger.info("Config.gray_scale={}".format(Config.gray_scale))
     logger.info("Config.show_preview_video={}".format(Config.show_preview_video))
-    logger.info("Config.calibration={}".format(Config.calibration))
-    logger.info("Config.record_output={}".format(Config.record_output))
+    logger.info("Config.calibration={}".format(Config.calibrating))
+    logger.info("Config.record_output={}".format(Config.save_to_video))
 
 
 def setup_video_input():
-    Config.is_image = ".jpg" in Config.file_name or ".png" in Config.file_name
-    logger.info("Config.IS_IMAGE={}".format(Config.is_image))
+    project_state.is_image = ".jpg" in Config.file_name or ".png" in Config.file_name
+    logger.info("project_state.is_image={}".format(project_state.is_image))
 
-    if Config.is_image:
+    if project_state.is_image:
         logger.info("Opening image file: {}".format(Config.file_name))
-        capture = cv2.imread(Config.file_name, cv2.IMREAD_GRAYSCALE if Config.gray_scale else cv2.IMREAD_COLOR)
+        capture = cv2.imread(Config.file_name, cv2.IMREAD_COLOR)
     else:
         logger.info("Opening video file: {}".format(Config.file_name))
         capture = cv2.VideoCapture(Config.file_name)
@@ -161,11 +120,14 @@ def setup_video_input():
         logger.error("Failed to open file: {}".format(Config.file_name))
         sys.exit("Failed to open file: {}".format(Config.file_name))
 
+    project_state.frame_shape = (capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+                                 capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
     return capture
 
 
 def get_frame(capture):
-    if Config.is_image:
+    if project_state.is_image:
         ret = True
         frame = capture.copy()
     else:

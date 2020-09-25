@@ -1,13 +1,6 @@
-import logging
 import time
 from typing import Optional
 
-import cv2
-import numpy as np
-
-from config import Config
-from models import Key
-from project_state import keys
 from utils import *
 
 logger = logging.getLogger(__name__)
@@ -17,7 +10,7 @@ no_more_contours_found_time: Optional[float] = None
 
 
 def paint_calibration_status_text(frame, text):
-    cv2.rectangle(frame, (0, 0), (140, 80), (255, 255, 255), -1)
+    cv2.rectangle(frame, (0, 0), (140, 80), (255, 255, 255), -1, lineType=Config.line_type)
     cv2.putText(frame, text, (10, 60), Config.font_family, 2, (0, 0, 0), 2, lineType=Config.line_type)
 
 
@@ -42,7 +35,7 @@ def calibrate_key(frame, key: Key):
     paint_keys_points(zone)
     paint_contour_outlines(zone, contours)
     paint_contour_centers(zone, contour_centers)
-    paint_key_name(zone, key, text_margin=Config.key_brightness_area_size + Config.line_width)
+    paint_key_name(zone, key, text_margin=Config.text_distance_to_key)
 
     return show_image(zone)
 

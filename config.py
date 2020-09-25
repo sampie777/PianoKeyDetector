@@ -20,25 +20,9 @@ class Config(object):
 
     default_file_name: str = ""
     file_name: str = ""
-    gray_scale: bool = True
-    is_image: bool = False
-    record_output: bool = False
-    show_preview_video: bool = False
-    preview_frame_rate = 1
-
-    # CALIBRATION
-    calibration: bool = False
-    minimal_contour_area: int = 50
-    calibration_delay_between_keys: float = 0.0
-    calibration_key_start_delay: float = 0.0
-    calibration_key_stop_delay: float = 0.11
-    paint_key_points_as_line: bool = False
-
-    key_points_filter_standard_deviation = [15, 15]
 
     # PROCESSING
-    brightness_threshold: int = 0
-    key_brightness_area_size: int = 2
+    minimal_contour_area: int = 50
     contour_brightness_threshold: int = 80
 
     zone_bounds = [
@@ -46,15 +30,44 @@ class Config(object):
         [1920, 705],
     ]
 
+    # CALIBRATION
+    calibrating: bool = False
+    key_amount_to_calibrate: int = 30
+
+    calibration_delay_between_keys: float = 0.0
+    calibration_key_start_delay: float = 0.0
+    calibration_key_stop_delay: float = 0.11
+    key_points_filter_standard_deviation = [15, 15]
+
+    # OUTPUT
+    save_to_midi: bool = True
+    midi_min_note_duration: float = 1/8
+    midi_track_name: str = "Detected Track"
+    midi_track_index: int = 0
+    midi_channel: int = 0
+    midi_tempo: int = 120
+    midi_volume: int = 100
+
+    save_to_video: bool = False
+    show_preview_video: bool = False
+    preview_frame_rate = 1
+
     # PAINTING
-    line_width: int = 2
-    pressed_color = (255, 255, 255)
-    not_pressed_color = (0, 0, 0)
-    font_family = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1.3
-    font_color = (255, 255, 0)
-    font_thickness = 2
     line_type = cv2.LINE_AA
+    font_family = cv2.FONT_HERSHEY_SIMPLEX
+    key_dot_radius: int = 4
+    key_dot_thickness: int = 2
+    key_dot_pressed_color = (255, 255, 255)
+    key_dot_not_pressed_color = (0, 0, 0)
+    key_name_font_scale = 1.3
+    key_name_font_thickness = 2
+    key_line_thickness = 2
+    key_point_radius = 1
+    key_point_thickness = -1
+    text_distance_to_key: int = 10
+
+    contour_center_radius = 5
+    contour_center_thickness = -1
 
     @staticmethod
     def load_profile(profile_name: str = None):
@@ -68,7 +81,6 @@ class Config(object):
 
         Config.profile_name = profile_name
         Config.profile = profile
-        Config.brightness_threshold = profile.brightness_threshold
         if profile.default_file_name is not None:
             Config.default_file_name = profile.default_file_name
 
