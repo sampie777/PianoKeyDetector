@@ -47,8 +47,12 @@ class Config(object):
     midi_channel: int = 0
     midi_tempo: int = 120
     midi_volume: int = 100
+    midi_pitch_offset_octave: int = 3
 
-    save_to_video: bool = False
+    save_to_video: bool = True
+    output_video_file_name: str = "/home/prive/IdeaProjects/PianoKeyDetector/output.mp4"
+    output_video_codec: str = "MP4V"
+
     show_preview_video: bool = False
     preview_frame_rate = 1
 

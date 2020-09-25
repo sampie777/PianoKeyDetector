@@ -95,8 +95,8 @@ def setup_outputs():
 
     if Config.save_to_video:
         logger.info("Creating video writer")
-        video_writer = cv2.VideoWriter('/home/prive/IdeaProjects/PianoKeyDetector/output.mp4',
-                                       cv2.VideoWriter_fourcc(*'MPEG'),
+        video_writer = cv2.VideoWriter(Config.output_video_file_name,
+                                       cv2.VideoWriter_fourcc(*Config.output_video_codec),
                                        project_state.fps,
                                        project_state.frame_shape)
 

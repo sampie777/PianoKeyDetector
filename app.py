@@ -26,8 +26,9 @@ def main(args: List):
     Config.load_profile(profiles.profiles[3].name)
 
     handle_command_args(args)
-    Config.calibrating = True
+    # Config.calibrating = True
     Config.show_preview_video = True
+    # Config.save_to_video = True
 
     load_keys()
 
@@ -120,8 +121,8 @@ def setup_video_input():
         logger.error("Failed to open file: {}".format(Config.file_name))
         sys.exit("Failed to open file: {}".format(Config.file_name))
 
-    project_state.frame_shape = (capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-                                 capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    project_state.frame_shape = (round(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                                 round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     return capture
 

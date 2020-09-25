@@ -33,8 +33,11 @@ def get_contour_center(contour):
     return x, y
 
 
-def paint_contour_outlines(frame, contours):
+def paint_contour_outlines(frame, contours, offset: List = None):
     for i, contour in enumerate(contours):
+        if offset is not None:
+            contour = np.add(offset, contour)
+
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
         cv2.drawContours(frame, [contour], 0, (0, 100, 255), 1)
@@ -94,7 +97,10 @@ def paint_keys_points(frame, offset: List = None):
     for key in keys:
 
         if key.line is not None:
-            cv2.line(frame, key.line[0], key.line[1], key.color, Config.key_line_thickness)
+            start_point = tuple(np.add(offset, key.line[0]))
+            stop_point = tuple(np.add(offset, key.line[1]))
+
+            cv2.line(frame, start_point, stop_point, key.color, Config.key_line_thickness)
             continue
 
         for point in key.points:

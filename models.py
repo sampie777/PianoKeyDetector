@@ -192,8 +192,7 @@ class Key:
 
     @staticmethod
     def get_pitch_for_key(key_name: str) -> int:
-        offset_octave = 2
-        octave = int(key_name[-1:]) + offset_octave
+        octave = int(key_name[-1:]) + Config.midi_pitch_offset_octave
         note = key_name[:-1]
 
         index = Key.note_base_names.index(note)

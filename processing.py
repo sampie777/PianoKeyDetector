@@ -22,13 +22,13 @@ def loop(frame, current_frame_index: int = -1) -> bool:
     detect_keys_from_contours(contours)
 
     # PAINT PART
-    frame = cv2.addWeighted(zone, 1, thresh, 0.1, 0)
+    # frame = cv2.addWeighted(zone, 1, thresh, 0.1, 0)
 
-    paint_contour_outlines(frame, contours)
-    paint_keys_points(frame)#, offset=Config.zone_bounds[0])
+    paint_contour_outlines(frame, contours, offset=Config.zone_bounds[0])
+    paint_keys_points(frame, offset=Config.zone_bounds[0])
     paint_keys_detected_chances(frame)
 
-    return display_pressed_keys(frame)#, offset=Config.zone_bounds[0])
+    return display_pressed_keys(frame, offset=Config.zone_bounds[0])
 
 
 def detect_keys_from_contours(contours):
