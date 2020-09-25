@@ -4,6 +4,9 @@ logger = logging.getLogger(__name__)
 
 
 def paint_keys_detected_chances(frame):
+    if not Config.display_debug_info:
+        return
+
     for i, key in enumerate(keys):
         cv2.putText(frame, "{0: <5}".format(key.name),
                     (10, 50 + i * 20), Config.font_family, 0.6, (255, 255, 0), 1, lineType=Config.line_type)
@@ -54,6 +57,9 @@ def display_pressed_keys(frame: np.ndarray, offset: List = None) -> bool:
 
 
 def paint_key_on_frame(frame: np.ndarray, key: Key, offset: List = None):
+    if not key.is_calibrated:
+        return
+
     circle_color = Config.key_dot_pressed_color if key.is_pressed else Config.key_dot_not_pressed_color
 
     draw_point = get_drawing_point_for_point_with_offset(key.get_center_point(), offset)

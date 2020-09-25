@@ -97,11 +97,16 @@ def paint_keys_points(frame, offset: List = None):
     for key in keys:
 
         if key.line is not None:
-            start_point = tuple(np.add(offset, key.line[0]))
-            stop_point = tuple(np.add(offset, key.line[1]))
+            start_point = key.line[0]
+            stop_point = key.line[1]
+            if offset is not None:
+                start_point = tuple(np.add(offset, start_point))
+                stop_point = tuple(np.add(offset, stop_point))
 
             cv2.line(frame, start_point, stop_point, key.color, Config.key_line_thickness)
-            continue
+
+            if not Config.paint_key_points_if_line_available:
+                continue
 
         for point in key.points:
             if offset is not None:

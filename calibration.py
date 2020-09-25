@@ -63,6 +63,7 @@ def check_if_calibration_is_done(contours, key):
         return
 
     create_line_for_key(key)
+
     if key.line is None:
         logger.warning("Could not get a line for key {}. Retrying.".format(key))
         key.points.clear()
@@ -97,7 +98,7 @@ def create_line_for_key(key: Key):
     xs = np.array(xs)
     ys = np.array(ys)
 
-    m, b = best_fit_slope_and_intercept(xs, ys)
+    m, b = np.polyfit(xs, ys, 1)[:2]
 
     x_min = xs.min(initial=None)
     y_min = m * x_min + b

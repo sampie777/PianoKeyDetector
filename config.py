@@ -55,6 +55,7 @@ class Config(object):
 
     show_preview_video: bool = False
     preview_frame_rate = 1
+    display_debug_info: bool = False
 
     # PAINTING
     line_type = cv2.LINE_AA
@@ -68,6 +69,7 @@ class Config(object):
     key_line_thickness = 2
     key_point_radius = 1
     key_point_thickness = -1
+    paint_key_points_if_line_available: bool = False
     text_distance_to_key: int = 10
 
     contour_center_radius = 5
