@@ -141,10 +141,10 @@ def paint_keys_points(frame, offset: List = None):
 
 
 def paint_key_name(frame, key, text_margin: int, offset: List = None):
-    if len(key.points) == 0:
+    if key.line is None:
         return
 
-    draw_point = get_drawing_point_for_point_with_offset(np.mean(key.points, axis=0), offset)
+    draw_point = get_drawing_point_for_point_with_offset(np.mean(key.line, axis=0), offset)
 
     # Draw shadow
     cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),

@@ -35,7 +35,6 @@ def loop(frame, current_frame_index: int = -1) -> bool:
     detect_keys_from_contours(contours)
 
     key_presses: List[Key] = list(filter(lambda key: key.is_pressed, keys))
-    # print(len(key_presses))
 
     # OUTPUT PART
     output.write_key_presses_to_midi(current_frame_index)
@@ -85,7 +84,7 @@ def display_pressed_keys(frame, key_presses, offset: List = None) -> bool:
 def paint_key_on_frame(frame, key, offset: List = None):
     circle_color = Config.pressed_color if key.is_pressed else Config.not_pressed_color
 
-    draw_point = get_drawing_point_for_point_with_offset(np.mean(key.points, axis=0), offset)
+    draw_point = get_drawing_point_for_point_with_offset(np.mean(key.line, axis=0), offset)
 
     cv2.circle(frame, draw_point, Config.key_brightness_area_size + Config.line_width // 2, circle_color,
                Config.line_width, lineType=Config.line_type)

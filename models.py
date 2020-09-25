@@ -35,11 +35,15 @@ class Key:
         self.midi_pitch = Key.get_pitch_for_key(self.name)
 
         self._detected_points: set = set()
-        self._detected_changes: List = []
-        self._last_match_time = 0
-        self._cooldown_time = Config.preview_frame_rate * 0.05
+        self._detected_chances: List = []
+        self._detect_chance_threshold = 0.1
         self._detect_using_points = False
         self._detect_using_line = True
+
+        self._press_started_time = None
+        self._minimum_duration_time = Config.preview_frame_rate * 0.08
+        self._last_match_time = 0
+        self._cooldown_time = Config.preview_frame_rate * 0.1
 
         self._previous_state: bool = False
 
@@ -91,7 +95,18 @@ class Key:
     def _check_for_using_lines(self, contour):
         if self.line is None:
             return
-        pass
+
+        start_point = np.array(self.line[0])
+        stop_point = np.array(self.line[1])
+        points_on_line = np.linspace(start_point, stop_point,
+                                     round(np.linalg.norm(start_point - stop_point)))
+
+        for point in points_on_line:
+            result = cv2.pointPolygonTest(contour, tuple(point), False)
+            if result < 1:
+                continue
+
+            self.detected_chance += 1 / len(points_on_line)
 
     def check_for_contour_finalize(self):
         if self._detect_using_points:
@@ -105,21 +120,64 @@ class Key:
         if self.line is None:
             return
 
-        self.detected_chance = 0
+        self._detected_chances.append(self.detected_chance)
+
+        # Handle start/stop (delays)
+        if self.detected_chance > 0:
+            self.detected_chance = 0
+
+            ##
+            # Handle START smoother delay
+            #
+            # Check if press already was started
+            if self._press_started_time is None:
+                self._press_started_time = time.time()
+                self.set_pressed(False)
+                return
+
+            # Check if press has started long enough ago
+            elif self._press_started_time + self._minimum_duration_time > time.time():
+                self.set_pressed(False)
+                return
+
+            ##
+            # Handle STOP smoother delay
+            self._last_match_time = time.time()
+        else:
+            # If press stopped long enough ago
+            if self._last_match_time + self._cooldown_time < time.time():
+                self._press_started_time = None
+                self._detected_chances.clear()
+
+        # Calculate average detected chance
+        if len(self._detected_chances) == 0:
+            detected_average = 0
+        else:
+            detected_average = sum(self._detected_chances) / len(self._detected_chances)
+
+        # The final logic to determine if the detected chance is enough to mark is as a key press
+        if detected_average > self._detect_chance_threshold:
+            self.set_pressed(True)
+        else:
+            self.set_pressed(False)
+
+        # temp
+        if detected_average > self.highest_detected_chance:
+            self.highest_detected_chance = detected_average
 
     def _finalize_using_chances(self):
-        self._detected_changes.append(self.detected_chance)
+        self._detected_chances.append(self.detected_chance)
         # Reset if there aren't any points in the contour
         if self.detected_chance == 0.0:
             if self._last_match_time + self._cooldown_time < time.time():
-                self._detected_changes.clear()
+                self._detected_chances.clear()
         else:
             self._last_match_time = time.time()
         # Determine if there are enough points in the contour for a key press
-        if len(self._detected_changes) == 0:
+        if len(self._detected_chances) == 0:
             detected_average = 0
         else:
-            detected_average = sum(self._detected_changes) / len(self._detected_changes)
+            detected_average = sum(self._detected_chances) / len(self._detected_chances)
         if detected_average > 0.3:
             self.set_pressed(True)
         else:
