@@ -25,6 +25,11 @@ video_writer: Optional[cv2.VideoWriter] = None
 def add_note(key: Key, time, duration):
     midi_time = time * bpm_conversion
     duration = duration * bpm_conversion
+
+    if Config.midi_round_note_to_beat:
+        midi_time = round(midi_time / Config.midi_min_note_duration) * Config.midi_min_note_duration
+        duration = round(duration / Config.midi_min_note_duration) * Config.midi_min_note_duration
+
     info = "{} ({}) at time={:.3f} ({:.3f} s) for {:.3f}".format(key.name, key.midi_pitch, midi_time,
                                                                  time, duration)
 

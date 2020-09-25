@@ -42,6 +42,7 @@ class Config(object):
     # OUTPUT
     save_to_midi: bool = True
     midi_min_note_duration: float = 1/8
+    midi_round_note_to_beat: bool = True
     midi_track_name: str = "Detected Track"
     midi_track_index: int = 0
     midi_channel: int = 0
