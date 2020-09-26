@@ -27,11 +27,12 @@ def loop(frame, current_frame_index: int = -1) -> bool:
     # PAINT PART
     # frame = cv2.addWeighted(zone, 1, thresh, 0.1, 0)
 
-    paint_contour_outlines(frame, contours, offset=Config.zone_bounds[0])
-    paint_keys_points(frame, offset=Config.zone_bounds[0])
+    paint_keys_points(zone)
+    paint_contour_outlines(zone, contours)
+    paint_pressed_keys(zone)
     paint_keys_detected_chances(frame)
 
-    return display_pressed_keys(frame, offset=Config.zone_bounds[0])
+    return show_image(frame)
 
 
 def detect_keys_from_contours(contours):
@@ -46,24 +47,22 @@ def detect_keys_from_contours(contours):
         key.check_for_contour_finalize()
 
 
-def display_pressed_keys(frame: np.ndarray, offset: List = None) -> bool:
-    if not Config.show_preview_video:
-        return True
-
+def paint_pressed_keys(frame: np.ndarray, offset: List = None):
     for key in keys:
         paint_key_on_frame(frame, key, offset)
-
-    return show_image(frame)
 
 
 def paint_key_on_frame(frame: np.ndarray, key: Key, offset: List = None):
     if not key.is_calibrated:
         return
 
+    center_point = key.get_center_point()
+    if center_point == (-1, -1):
+        return
+
+    draw_point = get_drawing_point_for_point_with_offset(center_point, offset)
+
     circle_color = Config.key_dot_pressed_color if key.is_pressed else Config.key_dot_not_pressed_color
-
-    draw_point = get_drawing_point_for_point_with_offset(key.get_center_point(), offset)
-
     cv2.circle(frame, draw_point, Config.key_dot_radius, circle_color,
                Config.key_dot_thickness, lineType=Config.line_type)
 

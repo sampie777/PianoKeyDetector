@@ -47,25 +47,27 @@ def paint_contour_outlines(frame, contours, offset: List = None):
 
 def prepare_frame(frame):
     global background_image
+
+    # temp
     if background_image is None and Config.profile.name == "Image_screenshot_24.09.2020_keypress.png 1.0":
         frame = background_image_file.copy()
 
-    zone = frame[Config.zone_bounds[0][1]:Config.zone_bounds[1][1], Config.zone_bounds[0][0]:Config.zone_bounds[1][0]]
-
+    zone_bounds = project_state.zone_bounds
     mask_area = project_state.mask_area
-    if mask_area is None:
-        mask_area = np.array([(120, 400),
-                              (1690, 270),
-                              (1710, 417),
-                              (141, 430)])
 
-    cv2.drawContours(zone, [mask_area], 0, (255, 255, 255), 1)
+    # Cut frame to important part
+    zone = frame[zone_bounds[0][1]:zone_bounds[1][1], zone_bounds[0][0]:zone_bounds[1][0]]
 
+    if Config.paint_mask_outline:
+        cv2.drawContours(zone, [mask_area], 0, (100, 100, 100), 1, lineType=Config.line_type)
+
+    # Apply mask
     mask = np.zeros_like(zone)
     cv2.drawContours(mask, [mask_area], 0, (255, 255, 255), -1)
     masked = np.zeros_like(zone)
     masked[mask == 255] = zone[mask == 255]
 
+    # Apply image filters
     gray = cv2.cvtColor(masked, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (9, 9), 0)
     blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
@@ -168,3 +170,7 @@ def best_fit_slope_and_intercept(xs: np.ndarray, ys: np.ndarray):
     b = np.mean(ys) - m * np.mean(xs)
 
     return m, b
+
+
+def ndarray_to_string(array: np.ndarray) -> str:
+    return "[{}]".format(', '.join(str(list(e)) for e in array))

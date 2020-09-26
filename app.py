@@ -24,10 +24,10 @@ def main(args: List):
     logger.info("Starting application")
 
     Config.load_profile(profiles.profiles[3].name)
+    Config.update_project_state()
 
     handle_command_args(args)
-    Config.calibrating = True
-    Config.show_preview_video = True
+    # Config.calibrating = True
     # Config.save_to_video = True
 
     if Config.calibrating:
@@ -38,8 +38,10 @@ def main(args: List):
     # setup video input
     capture = setup_video_input()
 
+    # setup outputs
     output.setup_outputs()
 
+    # setup processing stuff
     if Config.calibrating:
         calibration.setup()
 
@@ -99,7 +101,6 @@ def load_keys():
 def handle_command_args(args: list):
     Config.file_name = args[0] if len(args) > 0 else Config.default_file_name
     Config.calibrating = "--calibrate" in args
-    Config.show_preview_video = "--preview" in args
     Config.save_to_video = "--record" in args
 
     logger.info("Config.file_name={}".format(Config.file_name))

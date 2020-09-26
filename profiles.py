@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+import numpy as np
+
 
 class Profile:
     def __init__(self, name: str,
@@ -12,6 +14,7 @@ class Profile:
                  brightness_threshold: int = 0,
                  default_file_name: Optional[str] = None,
                  zone_bounds: List = None,
+                 mask_area: np.ndarray = None,
                  minimal_contour_area: int = 0,
                  calibration_delay_between_keys: float = 0,
                  calibration_key_start_delay: float = 0,
@@ -30,6 +33,10 @@ class Profile:
         self.default_file_name = default_file_name
 
         self.zone_bounds: List = zone_bounds if zone_bounds is not None else [[0, 0], [0, 0]]
+        self.mask_area: np.ndarray = mask_area if mask_area is not None else np.array([(0, 0),
+                                                                                       (0, 0),
+                                                                                       (0, 0),
+                                                                                       (0, 0)])
         self.minimal_contour_area = minimal_contour_area
         self.calibration_delay_between_keys = calibration_delay_between_keys
         self.calibration_key_start_delay = calibration_key_start_delay
@@ -93,11 +100,17 @@ profiles: List[Profile] = [
             default_file_name="/home/prive/IdeaProjects/PianoKeyDetector/resources/VID_20200924_100646.mp4",
             zone_bounds=[[100, 249],
                          [1920, 705], ],
+            mask_area=np.array([(120, 400),
+                                (1690, 270),
+                                (1710, 417),
+                                (141, 430)]),
             minimal_contour_area=50,
             calibration_delay_between_keys=0.0,
             calibration_key_start_delay=0.0,
             calibration_key_stop_delay=0.0,
-            key_points_filter_standard_deviation=[15, 15],
+            key_points_filter_standard_deviation=[
+                15,
+                15],
             contour_brightness_threshold=30,
             ),
     Profile("VID_20200924_100802.mp4 1.0",  # 4

@@ -3,7 +3,9 @@ import os
 from typing import Optional
 
 import cv2
+import numpy as np
 
+import project_state
 from profiles import Profile
 from profiles import profiles
 
@@ -29,9 +31,14 @@ class Config(object):
         [100, 249],
         [1920, 705],
     ]
+    mask_area = np.array([(120, 400),
+                          (1690, 270),
+                          (1710, 417),
+                          (141, 430)])
 
     # CALIBRATION
     calibrating: bool = False
+    calibrate_zone: bool = True
     key_amount_to_calibrate: int = 30
 
     calibration_delay_between_keys: float = 0.0
@@ -54,10 +61,10 @@ class Config(object):
     output_video_file_name: str = "/home/prive/IdeaProjects/PianoKeyDetector/output.mp4"
     output_video_codec: str = "MP4V"
 
-    show_preview_video: bool = False
+    show_preview_video: bool = True
+    preview_window_title = "Piano Key Detector"
     preview_frame_rate = 1
     display_debug_info: bool = False
-    preview_window_title = "Piano Key Detector"
 
     # PAINTING
     line_type = cv2.LINE_AA
@@ -73,6 +80,8 @@ class Config(object):
     key_point_thickness = -1
     paint_key_points_if_line_available: bool = False
     text_distance_to_key: int = 10
+
+    paint_mask_outline: bool = True
 
     contour_center_radius = 5
     contour_center_thickness = -1
@@ -93,9 +102,15 @@ class Config(object):
             Config.default_file_name = profile.default_file_name
 
         Config.zone_bounds = profile.zone_bounds
+        Config.mask_area = profile.mask_area
         Config.minimal_contour_area = profile.minimal_contour_area
         Config.calibration_delay_between_keys = profile.calibration_delay_between_keys
         Config.calibration_key_start_delay = profile.calibration_key_start_delay
         Config.calibration_key_stop_delay = profile.calibration_key_stop_delay
         Config.key_points_filter_standard_deviation = profile.key_points_filter_standard_deviation
         Config.contour_brightness_threshold = profile.contour_brightness_threshold
+
+    @staticmethod
+    def update_project_state():
+        project_state.zone_bounds = Config.zone_bounds
+        project_state.mask_area = Config.mask_area
