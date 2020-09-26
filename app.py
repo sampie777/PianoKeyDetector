@@ -26,9 +26,12 @@ def main(args: List):
     Config.load_profile(profiles.profiles[3].name)
 
     handle_command_args(args)
-    # Config.calibrating = True
+    Config.calibrating = True
     Config.show_preview_video = True
     # Config.save_to_video = True
+
+    if Config.calibrating:
+        Config.save_to_midi = False
 
     load_keys()
 
@@ -36,6 +39,9 @@ def main(args: List):
     capture = setup_video_input()
 
     output.setup_outputs()
+
+    if Config.calibrating:
+        calibration.setup()
 
     current_frame_index = -1
     while True:

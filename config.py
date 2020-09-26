@@ -57,6 +57,7 @@ class Config(object):
     show_preview_video: bool = False
     preview_frame_rate = 1
     display_debug_info: bool = False
+    preview_window_title = "Piano Key Detector"
 
     # PAINTING
     line_type = cv2.LINE_AA

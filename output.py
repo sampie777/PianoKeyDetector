@@ -93,10 +93,14 @@ def midi_save_file(file_name: str = "output.mid"):
 def setup_outputs():
     global midi_writer, video_writer
 
+    if Config.show_preview_video:
+        cv2.namedWindow(Config.preview_window_title)
+
     if Config.save_to_midi:
-        midi_writer = MIDIFile(1)  # only 1 track
+        midi_writer = MIDIFile(numTracks=1)
         midi_writer.addTrackName(Config.midi_track_index, 0, Config.midi_track_name)
         midi_writer.addTempo(Config.midi_track_index, 0, Config.midi_tempo)
+        midi_writer.addProgramChange(Config.midi_track_index, 0, 0, program=0)  # 0: Acoustic Grand (https://pjb.com.au/muscript/gm.html)
 
     if Config.save_to_video:
         logger.info("Creating video writer")

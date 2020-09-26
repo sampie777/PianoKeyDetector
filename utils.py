@@ -4,6 +4,7 @@ from typing import List
 import cv2
 import numpy as np
 
+import project_state
 from config import Config
 from models import Key
 from project_state import keys
@@ -15,7 +16,7 @@ background_image_file = cv2.imread(
 background_image = None
 
 
-def show_image(image, title: str = "Image", delay: int = Config.preview_frame_rate) -> bool:
+def show_image(image, title: str = Config.preview_window_title, delay: int = Config.preview_frame_rate) -> bool:
     cv2.namedWindow(title, cv2.WND_PROP_FULLSCREEN)
     cv2.setWindowProperty(title, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     cv2.imshow(title, image)
@@ -41,7 +42,7 @@ def paint_contour_outlines(frame, contours, offset: List = None):
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
         cv2.drawContours(frame, [contour], 0, (0, 100, 255), 1)
-        cv2.putText(frame, str(i), (x + w + 5, y), Config.font_family, 0.8, (200, 0, 200), 1)
+        cv2.putText(frame, str(i), (x + w + 5, y + h), Config.font_family, 0.8, (200, 0, 200), 1)
 
 
 def prepare_frame(frame):
@@ -51,10 +52,14 @@ def prepare_frame(frame):
 
     zone = frame[Config.zone_bounds[0][1]:Config.zone_bounds[1][1], Config.zone_bounds[0][0]:Config.zone_bounds[1][0]]
 
-    mask_area = np.array([(120, 400),
-                          (1690, 270),
-                          (1710, 417),
-                          (141, 430)])
+    mask_area = project_state.mask_area
+    if mask_area is None:
+        mask_area = np.array([(120, 400),
+                              (1690, 270),
+                              (1710, 417),
+                              (141, 430)])
+
+    cv2.drawContours(zone, [mask_area], 0, (255, 255, 255), 1)
 
     mask = np.zeros_like(zone)
     cv2.drawContours(mask, [mask_area], 0, (255, 255, 255), -1)
@@ -110,14 +115,18 @@ def paint_keys_points(frame, offset: List = None):
 
         for point in key.points:
             if offset is not None:
-                point = (offset[0] + point[0], offset[1] + point[1])
+                point = tuple(np.add(point, offset))
 
             cv2.circle(frame, point, Config.key_point_radius, key.color,
                        Config.key_point_thickness, lineType=Config.line_type)
 
 
 def paint_key_name(frame, key: Key, text_margin: int, offset: List = None):
-    draw_point = get_drawing_point_for_point_with_offset(key.get_center_point(), offset)
+    center_point = key.get_center_point()
+    if center_point == (-1, -1):
+        return
+
+    draw_point = get_drawing_point_for_point_with_offset(center_point, offset)
 
     # Draw shadow
     cv2.putText(frame, key.name, (draw_point[0] + text_margin, draw_point[1] - text_margin),
@@ -134,13 +143,16 @@ def paint_key_name(frame, key: Key, text_margin: int, offset: List = None):
 def get_drawing_point_for_point_with_offset(draw_point, offset):
     draw_point = (round(draw_point[0]), round(draw_point[1]))
     if offset is not None:
-        draw_point = (offset[0] + draw_point[0], offset[1] + draw_point[1])
+        draw_point = tuple(np.add(draw_point, offset))
     return draw_point
 
 
-def paint_contour_centers(frame, contour_centers):
-    for c in contour_centers:
-        cv2.circle(frame, c, Config.contour_center_radius, (255, 0, 0),
+def paint_contour_centers(frame, contour_centers, offset: List = None):
+    for center_point in contour_centers:
+        if offset is not None:
+            center_point = tuple(np.add(center_point, offset))
+
+        cv2.circle(frame, center_point, Config.contour_center_radius, (255, 0, 0),
                    Config.contour_center_thickness, lineType=Config.line_type)
 
 
