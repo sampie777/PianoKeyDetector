@@ -38,10 +38,9 @@ class Config(object):
 
     # CALIBRATION
     calibrating: bool = False
-    calibrate_zone: bool = True
+    calibrate_zone: bool = False
     key_amount_to_calibrate: int = 30
     skip_to_time: float = 0
-    calibrate_in_slowmotion: bool = True
 
     calibration_delay_between_keys: float = 0.0
     calibration_key_start_delay: float = 0.0
@@ -112,6 +111,11 @@ class Config(object):
         Config.calibration_key_stop_delay = profile.calibration_key_stop_delay
         Config.key_points_filter_standard_deviation = profile.key_points_filter_standard_deviation
         Config.contour_brightness_threshold = profile.contour_brightness_threshold
+        Config.key_amount_to_calibrate = profile.key_amount_to_calibrate
+
+        if Config.mask_area is None or Config.zone_bounds is None:
+            Config.calibrating = True
+            Config.calibrate_zone = True
 
     @staticmethod
     def update_project_state():

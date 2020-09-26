@@ -19,12 +19,15 @@ def paint_calibration_status_text(frame, text):
     cv2.putText(frame, text, (10, 60), Config.font_family, 2, (0, 0, 0), 2, lineType=Config.line_type)
 
 
-def calibrate_key(frame, key: Key):
+def calibrate_key(frame, key: Key, current_frame_index):
     global last_calibrated, no_more_contours_found_time
 
     # PROCESSING PART
     contours, zone, differences, thresh = get_contours_in_frame(frame)
     contour_centers = get_contours_centers(contours)
+
+    if current_frame_index < Config.skip_to_time * 30:
+        return True
 
     if last_calibrated + Config.calibration_delay_between_keys + Config.calibration_key_start_delay < time.time():
         add_contour_centers_to_key_points(contour_centers, key)
@@ -77,6 +80,7 @@ def check_if_calibration_is_done(contours, key):
     key.is_calibrated = True
     logger.info("Key {} calibrated. Delaying for: {} ms"
                 .format(key, Config.calibration_delay_between_keys))
+    time.sleep(0.2)
 
 
 def get_contours_centers(contours: np.ndarray):
@@ -139,9 +143,6 @@ def filter_points_for_key(key: Key):
 
 
 def loop(frame, current_frame_index: int = -1) -> bool:
-    if current_frame_index < Config.skip_to_time * 30:
-        return True
-
     if not is_zone_calibration_done:
         return calibrate_zone_bounds(frame)
 
@@ -153,7 +154,7 @@ def loop(frame, current_frame_index: int = -1) -> bool:
         Config.calibrating = False
         return True
 
-    return calibrate_key(frame, key_to_calibrate)
+    return calibrate_key(frame, key_to_calibrate, current_frame_index)
 
 
 def print_keys():
@@ -166,8 +167,8 @@ def print_keys():
                       ', '.join(str(round(color)) for color in key.color),
                       key.line))
     print("]")
-    print("\nzone_bounds = np.array({})".format(ndarray_to_string(project_state.zone_bounds)))
-    print("mask_area = np.array({})".format(ndarray_to_string(project_state.mask_area)))
+    print("\nzone_bounds = {},".format(ndarray_to_string(project_state.zone_bounds)))
+    print("mask_area = np.array({}),".format(ndarray_to_string(project_state.mask_area)))
     print("\n")
 
 
@@ -175,15 +176,24 @@ def calibrate_zone_bounds(frame: np.ndarray):
     global is_zone_calibration_done
 
     # PROCESSING PART
-    if is_mouse_zone_calibration_done:
-        mouse_contour = np.array(mouse_clicks)
-        create_zone_and_mask_from_contour(mouse_contour)
+    logger.info("Going in endless loop for calibrating zone")
+    while not is_zone_calibration_done:
+        freeze_frame = frame.copy()
 
-    # PAINT PART
-    draw_mouse_points(frame)
+        if is_mouse_zone_calibration_done:
+            mouse_contour = np.array(mouse_clicks)
+            create_zone_and_mask_from_contour(mouse_contour)
 
-    preview_frame_rate = 100 * Config.preview_frame_rate if Config.calibrate_in_slowmotion else Config.preview_frame_rate
-    return show_image(frame, delay=preview_frame_rate)
+            # (1) so the zone cut can be done when the zone bounds are available
+            set_background_image(None)
+            get_contours_in_frame(frame)
+
+        # PAINT PART
+        draw_mouse_points(freeze_frame)
+
+        if not show_image(freeze_frame):
+            return False
+    return True
 
 
 def create_zone_and_mask_from_contour(mouse_contour):

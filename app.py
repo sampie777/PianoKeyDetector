@@ -27,7 +27,7 @@ def main(args: List):
     Config.update_project_state()
 
     handle_command_args(args)
-    Config.calibrating = True
+    # Config.calibrating = True
     # Config.save_to_video = True
 
     load_keys()
@@ -97,8 +97,6 @@ def load_keys():
 
 def handle_command_args(args: list):
     Config.file_name = args[0] if len(args) > 0 else Config.default_file_name
-    Config.calibrating = "--calibrate" in args
-    Config.save_to_video = "--record" in args
 
     logger.info("Config.file_name={}".format(Config.file_name))
     logger.info("Config.show_preview_video={}".format(Config.show_preview_video))

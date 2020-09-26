@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 import cv2
 import numpy as np
@@ -45,6 +45,12 @@ def paint_contour_outlines(frame, contours, offset: List = None):
         cv2.putText(frame, str(i), (x + w + 5, y + h), Config.font_family, 0.8, (200, 0, 200), 1)
 
 
+def set_background_image(frame: Optional[np.ndarray]):
+    global background_image
+    logger.info("Setting background image")
+    background_image = frame
+
+
 def prepare_frame(frame):
     global background_image
 
@@ -73,8 +79,7 @@ def prepare_frame(frame):
     blurred = cv2.GaussianBlur(blurred, (9, 9), 0)
 
     if background_image is None:
-        logger.info("Set background image")
-        background_image = blurred
+        set_background_image(blurred)
         return zone, blurred, True
 
     return zone, blurred, False
