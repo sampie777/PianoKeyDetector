@@ -23,11 +23,11 @@ logging.basicConfig(
 def main(args: List):
     logger.info("Starting application")
 
-    Config.load_profile(profiles.profiles[3].name)
+    Config.load_profile(profiles.profiles[2].name)
     Config.update_project_state()
 
     handle_command_args(args)
-    # Config.calibrating = True
+    Config.calibrating = True
     # Config.save_to_video = True
 
     load_keys()

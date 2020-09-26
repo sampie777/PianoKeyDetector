@@ -120,7 +120,10 @@ def write_output_frame(current_frame_index: int, frame: np.ndarray):
 
 def save_outputs():
     if Config.calibrating:
-        calibration.print_keys()
+        calibration.print_calibrated_keys()
+
+        if not calibration.is_zone_calibration_done:
+            calibration.print_calibrated_zone()
 
     if Config.save_to_midi and not Config.calibrating:
         midi_save_file()

@@ -58,7 +58,7 @@ class Config(object):
     midi_volume: int = 100
     midi_pitch_offset_octave: int = 3
 
-    save_to_video: bool = True
+    save_to_video: bool = False
     output_video_file_name: str = "/home/prive/IdeaProjects/PianoKeyDetector/output.mp4"
     output_video_codec: str = "MP4V"
 
