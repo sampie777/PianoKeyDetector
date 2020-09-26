@@ -206,30 +206,12 @@ def draw_mouse_points(frame):
     if len(mouse_clicks) == 0:
         return
 
-    prev_point = None
-    # Connect points with line
-    for point in mouse_clicks:
-        if prev_point is None:
-            if is_mouse_zone_calibration_done:
-                prev_point = mouse_clicks[-1]
-            else:
-                prev_point = point
-                continue
-
-        cv2.line(frame, prev_point, point, (255, 255, 255), 2, lineType=Config.line_type)
-        prev_point = point
+    predicted_contour = np.array(mouse_clicks + [mouse_position])
+    cv2.drawContours(frame, [predicted_contour], 0, (255, 255, 255), 2, lineType=Config.line_type)
 
     # Mark points with circle
     for point in mouse_clicks:
         cv2.circle(frame, point, 4, (255, 0, 255), -1, lineType=Config.line_type)
-
-    # Draw point/line in progress
-    if not is_mouse_zone_calibration_done:
-        cv2.line(frame, prev_point, mouse_position, (255, 255, 255), 1, lineType=Config.line_type)
-
-    # Draw rectangle around contour
-    (x, y, w, h) = cv2.boundingRect(np.array(mouse_clicks))
-    cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 1)
 
 
 def on_mouse_event_calibrate_zone(event, x, y, flags, param):
