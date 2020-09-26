@@ -150,7 +150,8 @@ def loop(frame, current_frame_index: int = -1) -> bool:
         key_to_calibrate = next(key for key in keys if not key.is_calibrated)
     except StopIteration:
         logger.info("Calibration is done")
-        return False
+        Config.calibrating = False
+        return True
 
     return calibrate_key(frame, key_to_calibrate)
 

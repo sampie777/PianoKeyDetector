@@ -111,7 +111,7 @@ def setup_outputs():
 
 
 def write_output_frame(current_frame_index: int, frame: np.ndarray):
-    if Config.save_to_midi:
+    if Config.save_to_midi and not Config.calibrating:
         write_key_presses_to_midi(current_frame_index)
 
     if Config.save_to_video:
@@ -122,7 +122,7 @@ def save_outputs():
     if Config.calibrating:
         calibration.print_keys()
 
-    if Config.save_to_midi:
+    if Config.save_to_midi and not Config.calibrating:
         midi_save_file()
 
     if Config.save_to_video:
