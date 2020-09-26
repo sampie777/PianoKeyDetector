@@ -40,6 +40,8 @@ class Config(object):
     calibrating: bool = False
     calibrate_zone: bool = True
     key_amount_to_calibrate: int = 30
+    skip_to_time: float = 0
+    calibrate_in_slowmotion: bool = True
 
     calibration_delay_between_keys: float = 0.0
     calibration_key_start_delay: float = 0.0
@@ -101,6 +103,7 @@ class Config(object):
         if profile.default_file_name is not None:
             Config.default_file_name = profile.default_file_name
 
+        Config.skip_to_time = profile.skip_to_time
         Config.zone_bounds = profile.zone_bounds
         Config.mask_area = profile.mask_area
         Config.minimal_contour_area = profile.minimal_contour_area

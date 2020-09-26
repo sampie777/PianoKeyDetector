@@ -12,6 +12,7 @@ class Profile:
                  b: float = 1,
                  c: float = 1,
                  brightness_threshold: int = 0,
+                 skip_to_time: float = 0,
                  default_file_name: Optional[str] = None,
                  zone_bounds: List = None,
                  mask_area: np.ndarray = None,
@@ -31,6 +32,8 @@ class Profile:
         self.c = c
         self.brightness_threshold = brightness_threshold
         self.default_file_name = default_file_name
+
+        self.skip_to_time = skip_to_time
 
         self.zone_bounds: List = zone_bounds if zone_bounds is not None else [[0, 0], [0, 0]]
         self.mask_area: np.ndarray = mask_area if mask_area is not None else np.array([(0, 0),
@@ -97,6 +100,7 @@ profiles: List[Profile] = [
             b=1.000,
             c=1.000,
             brightness_threshold=get_average_brightness_for(220, 360),
+            skip_to_time=5,
             default_file_name="/home/prive/IdeaProjects/PianoKeyDetector/resources/VID_20200924_100646.mp4",
             zone_bounds=[[100, 249],
                          [1920, 705], ],

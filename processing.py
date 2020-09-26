@@ -19,7 +19,7 @@ def loop(frame, current_frame_index: int = -1) -> bool:
     # PROCESSING PART
     contours, zone, differences, thresh = get_contours_in_frame(frame)
 
-    if current_frame_index < 5 * 30:
+    if current_frame_index < Config.skip_to_time * 30:
         return True
 
     detect_keys_from_contours(contours)

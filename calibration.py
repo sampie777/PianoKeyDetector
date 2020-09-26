@@ -139,7 +139,7 @@ def filter_points_for_key(key: Key):
 
 
 def loop(frame, current_frame_index: int = -1) -> bool:
-    if current_frame_index < 5 * 30:
+    if current_frame_index < Config.skip_to_time * 30:
         return True
 
     if not is_zone_calibration_done:
@@ -181,7 +181,8 @@ def calibrate_zone_bounds(frame: np.ndarray):
     # PAINT PART
     draw_mouse_points(frame)
 
-    return show_image(frame)
+    preview_frame_rate = 100 * Config.preview_frame_rate if Config.calibrate_in_slowmotion else Config.preview_frame_rate
+    return show_image(frame, delay=preview_frame_rate)
 
 
 def create_zone_and_mask_from_contour(mouse_contour):
