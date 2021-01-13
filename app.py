@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from typing import List
 
@@ -23,11 +24,11 @@ logging.basicConfig(
 def main(args: List):
     logger.info("Starting application")
 
-    Config.load_profile(profiles.profiles[2].name)
+    Config.load_profile(profiles.profiles[8].name)
     Config.update_project_state()
 
     handle_command_args(args)
-    Config.calibrating = True
+    # Config.calibrating = True
     # Config.save_to_video = True
 
     load_keys()
@@ -43,13 +44,16 @@ def main(args: List):
         calibration.setup()
 
     current_frame_index = -1
-    while True:
+    while capture is not None:
         try:
             current_frame_index += 1
             ret, frame = get_frame(capture)
             if not ret or frame is None:
                 logger.info("No new frame found, exiting loop")
                 break
+
+            if current_frame_index < Config.cut_off_start_to_time * project_state.fps:
+                continue
 
             if Config.calibrating:
                 if not calibration.loop(frame, current_frame_index):
@@ -68,7 +72,7 @@ def main(args: List):
 
     output.save_outputs()
 
-    if not project_state.is_image:
+    if not project_state.is_image and capture is not None:
         logger.info("Releasing capture")
         capture.release()
 
@@ -107,6 +111,10 @@ def handle_command_args(args: list):
 def setup_video_input():
     project_state.is_image = ".jpg" in Config.file_name or ".png" in Config.file_name
     logger.info("project_state.is_image={}".format(project_state.is_image))
+
+    if not os.path.isfile(Config.file_name):
+        logger.error("File not found: {}".format(Config.file_name))
+        sys.exit("File not found: {}".format(Config.file_name))
 
     if project_state.is_image:
         logger.info("Opening image file: {}".format(Config.file_name))

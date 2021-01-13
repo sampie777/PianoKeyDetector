@@ -43,7 +43,7 @@ class Key:
         self._press_started_time = None
         self._minimum_duration_time = Config.preview_frame_rate * 0.08
         self._last_match_time = 0
-        self._cooldown_time = Config.preview_frame_rate * 0.1
+        self._cooldown_time = Config.preview_frame_rate * Config.key_cooldown_time
 
         self._previous_state: bool = False
 
@@ -188,7 +188,7 @@ class Key:
         self.detected_chance = len(self.points)
 
     def __repr__(self):
-        return "Key(name={},x={},y={},pressed={})".format(self.name, self.x, self.y, self.is_pressed)
+        return "Key(name={},is_pressed={},is_calibrated={})".format(self.name, self.is_pressed, self.is_calibrated)
 
     @staticmethod
     def get_pitch_for_key(key_name: str) -> int:

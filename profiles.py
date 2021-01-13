@@ -12,6 +12,7 @@ class Profile:
                  b: float = 1,
                  c: float = 1,
                  brightness_threshold: int = 0,
+                 cut_off_start_to_time: float = 0,
                  skip_to_time: float = 0,
                  default_file_name: Optional[str] = None,
                  zone_bounds: Optional[List] = None,
@@ -23,6 +24,7 @@ class Profile:
                  key_points_filter_standard_deviation: List = None,
                  contour_brightness_threshold: int = 0,
                  key_amount_to_calibrate: int = 30,
+                 key_cooldown_time: float = 0.1,
                  ):
         self.key_amount_to_calibrate = key_amount_to_calibrate
         self.name = name
@@ -35,6 +37,7 @@ class Profile:
         self.brightness_threshold = brightness_threshold
         self.default_file_name = default_file_name
 
+        self.cut_off_start_to_time = cut_off_start_to_time
         self.skip_to_time = skip_to_time
 
         self.zone_bounds: Optional[List] = zone_bounds
@@ -46,6 +49,7 @@ class Profile:
         self.key_points_filter_standard_deviation = key_points_filter_standard_deviation \
             if key_points_filter_standard_deviation is not None else [0, 0]
         self.contour_brightness_threshold = contour_brightness_threshold
+        self.key_cooldown_time = key_cooldown_time
 
 
 def get_average_brightness_for(min: int, max: int) -> int:
@@ -152,5 +156,20 @@ profiles: List[Profile] = [
             calibration_key_stop_delay=0.0,
             key_points_filter_standard_deviation=[60, 60],
             contour_brightness_threshold=40,
+            ),
+    Profile("VID_20201010_150138.mp4 1.0",  # 8
+            cut_off_start_to_time=5,
+            skip_to_time=120,
+            key_amount_to_calibrate=12 * 7 + 1,
+            default_file_name="/home/prive/IdeaProjects/PianoKeyDetector/resources/VID_20201010_150138.mp4",
+            minimal_contour_area=50,
+            zone_bounds=[[0, 428], [1920, 659]],
+            mask_area=np.array([[0, 0], [1919, 102], [1919, 230], [0, 55]]),
+            calibration_delay_between_keys=0.1,
+            calibration_key_start_delay=0.0,
+            calibration_key_stop_delay=0.11,
+            key_points_filter_standard_deviation=[15, 15],
+            contour_brightness_threshold=60,
+            key_cooldown_time=0.2
             ),
 ]

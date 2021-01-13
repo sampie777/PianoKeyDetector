@@ -26,6 +26,7 @@ class Config(object):
     # PROCESSING
     minimal_contour_area: int = 50
     contour_brightness_threshold: int = 80
+    key_cooldown_time: float = 0.1
 
     zone_bounds = [
         [100, 249],
@@ -40,6 +41,7 @@ class Config(object):
     calibrating: bool = False
     calibrate_zone: bool = False
     key_amount_to_calibrate: int = 30
+    cut_off_start_to_time: float = 0
     skip_to_time: float = 0
 
     calibration_delay_between_keys: float = 0.0
@@ -56,7 +58,7 @@ class Config(object):
     midi_channel: int = 0
     midi_tempo: int = 120
     midi_volume: int = 100
-    midi_pitch_offset_octave: int = 3
+    midi_pitch_offset_octave: int = 1
 
     save_to_video: bool = False
     output_video_file_name: str = "/home/prive/IdeaProjects/PianoKeyDetector/output.mp4"
@@ -92,6 +94,8 @@ class Config(object):
         if profile_name is None:
             profile_name = Config.profile_name
 
+        logger.info("Loading profile {}".format(profile_name))
+
         profile = next(p for p in profiles if p.name == profile_name)
         if profile is None:
             logger.info("Profile not found")
@@ -102,6 +106,7 @@ class Config(object):
         if profile.default_file_name is not None:
             Config.default_file_name = profile.default_file_name
 
+        Config.cut_off_start_to_time = profile.cut_off_start_to_time
         Config.skip_to_time = profile.skip_to_time
         Config.zone_bounds = profile.zone_bounds
         Config.mask_area = profile.mask_area
@@ -112,6 +117,7 @@ class Config(object):
         Config.key_points_filter_standard_deviation = profile.key_points_filter_standard_deviation
         Config.contour_brightness_threshold = profile.contour_brightness_threshold
         Config.key_amount_to_calibrate = profile.key_amount_to_calibrate
+        Config.key_cooldown_time = profile.key_cooldown_time
 
         if Config.mask_area is None or Config.zone_bounds is None:
             Config.calibrating = True
